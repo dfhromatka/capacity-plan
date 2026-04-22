@@ -1,4 +1,4 @@
-# EMEA North Capacity Planning Tool
+# Capacity Planning Tool
 
 A resource allocation and capacity planning application for managing team availability across projects, admin tasks, and absences.
 
