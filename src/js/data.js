@@ -312,8 +312,10 @@ export function empEntries(empId, entriesByEmp) {
   if (!s.showArchived) {
     const vis = s.visibleMonths;
     const mi0 = monthIdxMap.get(vis[0]?.key);
+    const editingId = Alpine.store('ui').editingRowId;
     e = e.filter(entry => {
       if (entry.archived) return false;
+      if (entry.id === editingId) return true;   // always show the row being edited
       return entry.days.slice(mi0, mi0 + vis.length).some(d => d > 0);
     });
   }
@@ -321,15 +323,21 @@ export function empEntries(empId, entriesByEmp) {
   return e;
 }
 
+const _TYPE_RANK = { 'Project': 0, 'Other': 1, 'Absence': 2 };
+
 export function sortEntries(entriesList, column, direction) {
   const sorted = [...entriesList];
   const mult = direction === 'asc' ? 1 : -1;
   sorted.sort((a, b) => {
+    const rankA = _TYPE_RANK[a.type] ?? 99;
+    const rankB = _TYPE_RANK[b.type] ?? 99;
+    // For non-type columns: type grouping is always preserved regardless of direction
+    if (column !== 'type' && rankA !== rankB) return rankA - rankB;
     let valA, valB;
     switch(column) {
-      case 'type':    valA = a.type || '';                    valB = b.type || '';                    break;
-      case 'project': valA = (a.project||'').toLowerCase();  valB = (b.project||'').toLowerCase();   break;
-      case 'status':  valA = (a.status||'').toLowerCase();   valB = (b.status||'').toLowerCase();    break;
+      case 'type':    valA = rankA;                              valB = rankB;                              break;
+      case 'project': valA = (a.project||'').toLowerCase();     valB = (b.project||'').toLowerCase();     break;
+      case 'status':  valA = (a.status||'').toLowerCase();      valB = (b.status||'').toLowerCase();      break;
       default: return 0;
     }
     if (valA < valB) return -1 * mult;

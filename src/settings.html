@@ -163,6 +163,21 @@
             </div>
           </div>
 
+          <!-- Budget Tolerance -->
+          <div class="settings-card">
+            <h3 class="settings-card__title">Budget Validation Tolerance</h3>
+            <label class="form-label" for="budget-tolerance">
+              Warn when committed days differ from budget by more than (%):
+            </label>
+            <input id="budget-tolerance" type="number" min="-1" max="100" step="1"
+              class="form-input"
+              :value="planSettings.budgetTolerancePct ?? 10"
+              @change="updatePlanSetting('budgetTolerancePct', parseFloat($event.target.value))">
+            <p class="settings-card__description">
+              Set to 0 to always warn, -1 to disable. Applies to both over- and under-budget when a project row has a budget (hours) set.
+            </p>
+          </div>
+
         </div>
 
         <!-- Right column: Data & Import/Export -->

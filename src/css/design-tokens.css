@@ -210,10 +210,10 @@
   
   /* Table — fixed layout, exact column widths, 13 visible months */
   --col-type-width: 110px;
-  --col-proj-width: 168px;
-  --col-rag-width: 50px;
-  --col-epsd-width: 90px;
-  --col-notes-width: 222px;
+  --col-proj-width: 100px;
+  --col-rag-width: 40px;
+  --col-epsd-width: 108px;
+  --col-notes-width: 272px;
   --col-month-width: 72px;
   --col-del-width: 56px;
   /* Scrollbar */

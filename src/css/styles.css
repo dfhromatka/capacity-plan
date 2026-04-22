@@ -216,8 +216,8 @@ tbody .col-proj {
   color: var(--color-gray-300);
   flex-shrink: 0;
 }
-.row-action-btn--copy  { font-size: 13px; margin-right: 0; }
-.row-action-btn--copy:hover  { color: var(--color-primary-light); }
+.row-action-btn--insert  { font-size: 15px; font-weight: var(--font-semibold); margin-right: 0; color: var(--color-text-secondary); }
+.row-action-btn--insert:hover  { color: var(--color-primary); }
 .row-action-btn--dismiss { color: var(--color-text-secondary); font-size: var(--font-size-base); font-weight: var(--font-semibold); }
 .row-action-btn--dismiss:hover { color: var(--color-danger-error); }
 .row-action-btn--restore { font-size: 13px; color: var(--color-primary); font-weight: var(--font-semibold); }
@@ -2522,6 +2522,9 @@ thead .col-rag, thead .col-epsd { text-align: center; }
 .entry-url-input { flex: 1; min-width: 0; width: auto; font-size: var(--text-base); color: var(--color-gray-600); }
 .btn-url-remove { font-size: var(--text-base); padding: 2px var(--space-1); background: none; border: none; cursor: pointer; color: var(--color-gray-neutral-400); }
 .entry-epsd-input { width: 100%; font-size: var(--text-base); padding: 2px var(--space-1); border: var(--border-thin) solid var(--color-gray-300); border-radius: var(--radius-base); }
+.budget-hours-row { margin-top: var(--space-1); }
+.entry-budget-input { width: 5.5rem; font-size: var(--text-sm); padding: 2px var(--space-1); border: var(--border-thin) solid var(--color-gray-300); border-radius: var(--radius-base); }
+.budget-hours-display { font-size: var(--text-sm); color: var(--color-gray-neutral-400); margin-top: 2px; }
 .entry-status-text { font-size: var(--text-md); color: var(--color-gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 textarea.inline-edit.entry-notes-input { width: 100%; box-sizing: border-box; resize: none; font-family: inherit; font-size: var(--text-md); line-height: 1.4; text-align: left; }
 .col-notes--editing { overflow: visible; }

@@ -9,7 +9,7 @@ import { getCountryByCode, getCountryFlag } from './countries.js';
 import { mutate } from './history.js';
 import { showConfirmModal } from './modals.js';
 import { triggerAutoSave, Storage } from './storage.js';
-import { checkEPSDAllocationPrompt } from './app.js';
+import { checkEPSDAllocationPrompt, checkBudgetAllocationPrompt } from './app.js';
 
 export function registerComponents(Alpine) {
 
@@ -354,6 +354,7 @@ export function registerComponents(Alpine) {
     editStatus:  '',
     editUrl:     '',
     editEpsd:    '',
+    editBudgetHours: '',
     editDays:    {},
     showUrlRow:  false,
     _focusMonthIndex: null,
@@ -374,6 +375,7 @@ export function registerComponents(Alpine) {
       this.editStatus  = entry.status     || '';
       this.editUrl     = entry.projectUrl || '';
       this.editEpsd    = entry.epsd       || '';
+      this.editBudgetHours = entry.budgetHours != null ? String(entry.budgetHours) : '';
       this.editDays    = Object.fromEntries(state.months.map((_, i) => [i, entry.days[i] || 0]));
       this.showUrlRow  = !!entry.projectUrl;
       const focusPos = this._focusMonthIndex;
@@ -412,14 +414,16 @@ export function registerComponents(Alpine) {
       const newProject = this.editProject.trim() || 'Untitled';
       const newUrl     = this.editUrl.trim() || null;
       const newEpsd    = this.editEpsd || null;
+      const newBudgetHours = parseFloat(this.editBudgetHours) || null;
 
+      let savedId = entryId;  // for isNew, overwritten inside mutate closure below
       if (!isNew) {
         mutate('saveEntry', () => {
           const ps = Alpine.store('plan');
           ps.entries = ps.entries.map(e => e.id !== entryId ? e : {
             ...e,
             type: this.editType, project: newProject, status: this.editStatus.trim(),
-            projectUrl: newUrl, epsd: newEpsd, days: newDays
+            projectUrl: newUrl, epsd: newEpsd, budgetHours: newBudgetHours, days: newDays
           });
           Alpine.store('ui').editingRowId = null;
         }, { entryId, project: newProject }, { type: 'entry', record: entry });
@@ -427,18 +431,25 @@ export function registerComponents(Alpine) {
         mutate('addEntry', () => {
           const ps = Alpine.store('plan');
           const newId = ps.nextId++;
+          savedId = newId;
           ps.entries = ps.entries.map(e => e.id !== entryId ? e : {
             ...e, id: newId,
             type: this.editType, project: newProject, status: this.editStatus.trim(),
-            projectUrl: newUrl, epsd: newEpsd, days: newDays
+            projectUrl: newUrl, epsd: newEpsd, budgetHours: newBudgetHours, days: newDays
           });
           Alpine.store('ui').editingRowId = null;
         }, { project: newProject });
       }
-      if (newEpsd !== oldEPSD) setTimeout(() => checkEPSDAllocationPrompt(
-        Alpine.store('plan').entries.find(e => e.project === newProject && e.empId === entry.empId) || entry,
-        oldEPSD, newEpsd
-      ), 100);
+      if (newEpsd !== oldEPSD) {
+        setTimeout(() => checkEPSDAllocationPrompt(
+          Alpine.store('plan').entries.find(e => e.id === savedId) || entry,
+          oldEPSD, newEpsd
+        ), 100);
+      } else {
+        setTimeout(() => checkBudgetAllocationPrompt(
+          Alpine.store('plan').entries.find(e => e.id === savedId) || entry
+        ), 150);
+      }
     },
 
     cancel() {

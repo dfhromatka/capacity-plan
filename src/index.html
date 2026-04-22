@@ -374,7 +374,7 @@
             </template>
             <!-- Fixed allocation (OH) row -->
             <template x-if="row.rowType === 'oh'">
-            <tr x-show="!$store.plan.collapseAllEntries && $store.plan.expandedOH[row.empId] && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-oh">
+            <tr x-show="$store.plan.expandedOH[row.empId] && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId]) && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-oh">
               <td class="col-type col-info tl"
                 x-text="row.icon + ' ' + row.label"></td>
               <!-- Bank holidays: plain cell; fixed alloc: editable description -->
@@ -460,12 +460,21 @@
               <td class="col-epsd col-info"
                 :class="[row.type === 'Project' && !isEditing ? 'editable' : '', row.type !== 'Project' ? 'cell-inactive' : 'text-center']"
                 @click="row.type === 'Project' && !isEditing && startEdit()">
-                <div x-show="row.type === 'Project' && !isEditing"
-                  class="epsd-display"
-                  :style="{color: row.epsd ? 'var(--color-gray-600)' : 'var(--color-gray-300)', fontWeight: row.epsd ? '600' : 'normal'}"
-                  x-text="row.epsdDisplay"></div>
-                <input x-show="row.type === 'Project' && isEditing"
-                  type="date" x-model="editEpsd" class="inline-edit entry-epsd-input">
+                <template x-if="!isEditing && row.type === 'Project'">
+                  <div>
+                    <div class="epsd-display"
+                      :style="{color: row.epsd ? 'var(--color-gray-600)' : 'var(--color-gray-300)', fontWeight: row.epsd ? '600' : 'normal'}"
+                      x-text="row.epsdDisplay"></div>
+                    <div x-show="row.budgetHours" class="budget-hours-display"
+                      x-text="row.budgetHours + 'h'"></div>
+                  </div>
+                </template>
+                <input x-show="isEditing" type="date" x-model="editEpsd" class="inline-edit entry-epsd-input">
+                <div x-show="isEditing" class="budget-hours-row">
+                  <input type="number" min="0" step="8" x-model="editBudgetHours"
+                    placeholder="Budget h" class="inline-edit entry-budget-input"
+                    title="Project budget in hours (÷8 = days)">
+                </div>
               </td>
               <!-- RAG -->
               <td class="col-rag col-info" :class="row.type !== 'Project' ? 'cell-inactive' : 'text-center'">
@@ -493,8 +502,8 @@
               <!-- Actions -->
               <td class="col-del">
                 <div x-show="!isEditing">
-                  <button @click.stop="$store.plan.copyEntry(row.id)" title="Copy row"
-                    class="row-action-btn row-action-btn--copy">📋</button>
+                  <button @click.stop="$store.plan.insertEntryAfter(row.id)" title="Insert row below"
+                    class="row-action-btn row-action-btn--insert">+</button>
                   <button @click.stop="$store.plan.promptEntryAction(row.id)"
                     :title="row.archived ? 'Restore or delete row' : 'Archive or delete row'"
                     :class="['row-action-btn', row.archived ? 'row-action-btn--restore' : 'row-action-btn--dismiss']"

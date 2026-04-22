@@ -3,6 +3,7 @@
 import { state, formatDateShort, getMonthKeyFromDate, monthIdxMap } from './data.js';
 import { mutate } from './history.js';
 import { showConfirmModal } from './modals.js';
+import Alpine from 'alpinejs';
 
 /* ── SMART ALLOCATION LOGIC ──────────────────────────── */
 
@@ -55,3 +56,62 @@ export function checkEPSDAllocationPrompt(entry, oldEPSD, newEPSD) {
     }
   }
 }
+
+/* ── BUDGET VALIDATION ───────────────────────────────────── */
+
+export function checkBudgetAllocationPrompt(entry) {
+  if (entry.type !== 'Project') return;
+  if (entry.budgetHours == null) return;
+
+  const tolerancePct = Alpine.store('plan').planSettings.budgetTolerancePct ?? 10;
+  if (tolerancePct < 0) return;  // -1 = feature disabled
+
+  const budgetDays = entry.budgetHours / 8;
+  let title, message;
+
+  if (entry.epsd) {
+    const epsdMonthKey = getMonthKeyFromDate(entry.epsd);
+    const epsdIdx = epsdMonthKey ? (monthIdxMap.get(epsdMonthKey) ?? -1) : -1;
+    if (epsdIdx === -1) return;
+
+    const committedDays = entry.days.slice(0, epsdIdx + 1).reduce((s, d) => s + d, 0);
+    const delta = committedDays - budgetDays;
+    if (Math.abs(delta / budgetDays) < tolerancePct / 100) return;
+
+    if (delta > 0) {
+      title = 'Over Budget';
+      message = `${entry.project} is over budget by ${Math.round(delta)}d `
+        + `(${committedDays}d committed vs ${budgetDays.toFixed(1)}d budget before EPSD).\n\n`
+        + `Review allocations or update the project budget.`;
+    } else {
+      title = 'Under Budget';
+      message = `${entry.project} has ${Math.round(-delta)}d of budget unallocated before EPSD `
+        + `(${committedDays}d committed vs ${budgetDays.toFixed(1)}d budget).\n\n`
+        + `Consider adding allocations or adjusting the budget.`;
+    }
+  } else {
+    const lastIdx = entry.days.reduceRight((found, d, i) => found !== -1 ? found : (d > 0 ? i : -1), -1);
+    if (lastIdx === -1) return;
+
+    const committedDays = entry.days.reduce((s, d) => s + d, 0);
+    const delta = committedDays - budgetDays;
+    if (Math.abs(delta / budgetDays) < tolerancePct / 100) return;
+
+    const lastMonth = state.months[lastIdx];
+    if (delta > 0) {
+      title = 'Over Budget';
+      message = `${entry.project} is over budget by ${Math.round(delta)}d `
+        + `(${committedDays}d committed vs ${budgetDays.toFixed(1)}d budget, `
+        + `last allocation in ${lastMonth?.short ?? '?'}).\n\n`
+        + `Consider setting an EPSD or reviewing allocations.`;
+    } else {
+      title = 'Under Budget';
+      message = `${entry.project} has ${Math.round(-delta)}d of budget unallocated `
+        + `(${committedDays}d committed vs ${budgetDays.toFixed(1)}d budget, `
+        + `last allocation in ${lastMonth?.short ?? '?'}).`;
+    }
+  }
+
+  showConfirmModal({ title, message, confirmText: 'OK', isDangerous: false });
+}
+

@@ -32,13 +32,13 @@ export function exportEntriesCsv(entries, employees, months) {
   const empMap = Object.fromEntries(employees.map(e => [e.id, e.name]));
   const monthKeys = months.map(m => m.key);
   const header = [
-    'employee_name','type','ipm','project','status','projectUrl','ragStatus','epsd',
+    'employee_name','type','ipm','project','status','projectUrl','ragStatus','epsd','budgetHours',
     ...monthKeys,
   ];
   const rows = entries.map(e => _row([
     empMap[e.empId] ?? '',
     e.type, e.ipm ?? '', e.project, e.status ?? '',
-    e.projectUrl ?? '', e.ragStatus ?? '', e.epsd ?? '',
+    e.projectUrl ?? '', e.ragStatus ?? '', e.epsd ?? '', e.budgetHours ?? '',
     ...monthKeys.map(k => {
       // e.days may be positional array (runtime) or keyed object (if loaded from _allDays)
       if (Array.isArray(e.days)) {
@@ -200,9 +200,10 @@ export function parseEntriesCsv(text, employeeNameToId, months) {
       ipm:        _get(row, cols, 'ipm') || '',
       project:    _get(row, cols, 'project') || '',
       status:     _get(row, cols, 'status') || '',
-      projectUrl: _get(row, cols, 'projecturl') || null,
-      ragStatus:  _get(row, cols, 'ragstatus') || null,
-      epsd:       _get(row, cols, 'epsd') || null,
+      projectUrl:  _get(row, cols, 'projecturl') || null,
+      ragStatus:   _get(row, cols, 'ragstatus') || null,
+      epsd:        _get(row, cols, 'epsd') || null,
+      budgetHours: parseFloat(_get(row, cols, 'budgethours')) || null,
       days,
       _allDays:   keyedDays,
     });
@@ -351,9 +352,10 @@ export function parseCapacityPlanCsv(text, months) {
       ipm:     '',
       project,
       status,
-      projectUrl: null,
-      ragStatus:  null,
-      epsd:       null,
+      projectUrl:  null,
+      ragStatus:   null,
+      epsd:        null,
+      budgetHours: null,
       days,
       _allDays: keyedDays,
     });

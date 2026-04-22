@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.16.0] - 2026-04-22
+
+### Added — #1200: Allocation Solver (Budget vs. EPSD Validation)
+
+- **New field `entry.budgetHours`** (nullable number): project budget entered in hours. Stored as hours; divided by 8 when comparing against day-based allocations.
+- **Inline edit panel:** Budget hours input appears inside the EPSD cell in edit mode (Project type only). No new column. In read mode, budget is shown below the EPSD date when set (`123h`).
+- **Validation on save:** After every save of a Project row, `checkBudgetAllocationPrompt()` (`src/js/app.js`) fires and compares committed days against the budget:
+  - If EPSD is set: sums `entry.days[0..epsdIdx]` vs `budgetHours / 8`; warns if delta exceeds the configured tolerance.
+  - If no EPSD: uses last non-zero allocation month as the horizon; warns on the same condition.
+  - No-op if either `budgetHours` or allocations are absent.
+- **Tolerance setting:** `planSettings.budgetTolerancePct` (default 10%). Configurable in Settings → Plan Settings → "Budget Validation Tolerance" card.
+- **Migration:** `_migrateData()` in `storage.js` sets `budgetHours = null` on entries that lack the field.
+- **CSV:** `budgetHours` column added to entries export/import (after `epsd`).
+- **Tab sequence:** Project → URL → Notes → EPSD → Budget hours → month cells.
+
+### Fixed
+
+- **Fixed allocations expand button** (FIX-01): `toggleOH()` and `toggleGroup()` in `store.js` were mutating object properties in-place, which Alpine v3 does not detect as reactive changes when adding a new key. Both now replace the object reference (`{ ...obj, [key]: val }`) so Alpine triggers correctly.
+
+### Changed
+
+- **Column widths:** `--col-proj-width` 168px → 100px; `--col-notes-width` 222px → 272px; `--col-epsd-width` 90px → 108px; `--col-rag-width` 50px → 40px.
+
+---
+
 ## [3.15.0] - 2026-04-22
 
 ### Added — #1310: Configurable Fixed Allocation Categories

@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-22 (v3.15.0)
+> **Last updated:** 2026-04-22 (v3.16.0)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -16,6 +16,68 @@
 ---
 
 ## Open Issues
+
+### FIX-02 — Tab order skips EPSD/budget inputs in inline edit mode ✅ Fixed v3.16.0
+
+**File:** `src/index.html`
+
+**Cause:** EPSD date and budget hours inputs were wrapped in `<template x-if="row.type === 'Project' && isEditing">`.
+All other edit-mode inputs use `x-show="isEditing"` (element stays in DOM, toggled via display).
+The `x-if` approach removes and re-inserts the DOM element each time editing starts — this can
+cause tab order to be undefined/skipped because the element isn't present when the browser
+builds its tab sequence at focus time.
+
+**Fix:** Replaced `x-if` wrapper with `x-show="isEditing"` on each input directly, matching
+the pattern every other edit-mode field uses. Read-mode display wrapped in `<template x-if="!isEditing && row.type === 'Project'">` to avoid showing the epsd-display for non-Project rows.
+
+---
+
+### EPSD-01 — `checkEPSDAllocationPrompt` called with stale entry on new rows 🟡
+
+**File:** `src/js/components.js` (tableRow `save()`, line ~441)
+
+**Symptom:** When saving a newly-added Project row (i.e. one whose temp ID was replaced by
+`nextId` during the `mutate()` call), the post-save find uses `e.project === newProject && e.empId`
+as the lookup key. If multiple rows share the same project name, or the entry was just created,
+the lookup may return the wrong entry — and the `|| entry` fallback passes the **pre-save**
+entry object with the **old** `days` array to `checkEPSDAllocationPrompt`. The function then
+evaluates allocation changes against stale data.
+
+**Fix direction:** Replace the post-save lookup with `e.id === entryId` (the ID captured before
+`mutate()` returns, which is the permanent ID for existing rows). For new rows where the temp
+ID is replaced inside `mutate()`, find by the highest ID in the plan or carry the new ID out
+of the mutation closure.
+
+---
+
+### SORT-01 — Project/activity sort ignores row-type grouping 🟡
+
+**File:** `src/js/store.js` (sort logic in `tableData` getter or sort handler)
+
+**Symptom:** Sorting by the project/activity column reorders all rows globally, mixing
+Project, Admin, and Absence rows together instead of sorting within type groups.
+
+**Expected behaviour:** Row-type order must be preserved (Project → Admin → Absence).
+Sorting by project/activity should only reorder rows within each type group.
+
+**Fix direction:** In the sort comparator, add a primary sort key on `row.type` using
+the canonical order (`Project=0, Admin=1, Absence=2`), then secondary sort on the
+project/activity field. Apply this two-key comparator whenever any column sort is active.
+
+---
+
+### FIX-01 — Fixed allocations expand button broken ✅ Fixed v3.16.0
+
+**Root cause (2 bugs):**
+1. `x-show` on the OH row used `!$store.plan.collapseAllEntries && expandedOH[empId]`. Since
+   `collapseAllEntries` defaults to `true`, the first operand was always `false` — no OH row
+   could ever show. Fixed by mirroring the entry-row pattern:
+   `expandedOH[empId] && (!collapseAllEntries || expandedInSummary[empId])`.
+2. `toggleOH()` and `toggleGroup()` mutated object properties in-place — Alpine v3 does not
+   detect new key additions on a plain reactive object. Both now replace the object reference:
+   `this.expandedOH = { ...this.expandedOH, [empId]: !this.expandedOH[empId] }`
+
+---
 
 ### KB-01 — Keyboard shortcuts blocked in inline edit mode 🟡
 
@@ -83,6 +145,12 @@ Full audit of all settings tabs confirmed — no other spacing-wrapper patterns 
 
 | ID | Severity | File(s) | Status |
 |----|----------|---------|--------|
+| FIX-01 | ✅ Fixed v3.16.0 | `src/js/store.js`, `src/index.html` | Fixed allocations expand: x-show condition + object-ref reactivity |
+| FIX-02 | ✅ Fixed v3.16.0 | `src/index.html` | Tab order: EPSD/budget inputs reverted from x-if to x-show |
+| FIX-03 | ✅ Fixed v3.16.0 | `src/js/data.js` | New row (all-zero days) filtered out of empEntries before it can be shown |
+| FIX-04 | ✅ Fixed v3.16.0 | `src/js/store.js` | insertEntryAfter: sort cleared + temp ID so cancel() cleans up |
+| SORT-01 | ✅ Fixed v3.16.0 | `src/js/data.js` | sortEntries: type-rank primary key preserves Project→Other→Absence grouping |
+| EPSD-01 | ✅ Fixed v3.16.0 | `src/js/components.js` | Budget prompt (150ms) overwrote EPSD prompt (100ms); now mutually exclusive per save |
 | KB-01 | 🟡 Important | `src/js/keyboard.js`, `src/js/components.js` | Shortcuts suppressed in inline edit mode when non-cell input focused |
 | PERF-10 | ✅ Fixed v3.14.2 | `src/index.html` | x-if rowType gate — DOM nodes ~200k → ~26k |
 | ARCH-04 | 🟡 Important | any `x-for` with multi-type templates | Watch for; no other instances found v3.14.2 |

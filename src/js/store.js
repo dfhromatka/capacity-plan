@@ -136,14 +136,18 @@ function buildTableData(store) {
         rows.push({ rowType: 'entry', key: 'entry-' + e.id, groupKey: group.key, ...e, ragStatus: e.ragStatus || 'null', epsdDisplay: e.epsd ? formatDateShort(e.epsd) : '—', dayCells });
       });
 
+      const totalEntries = byEmp.get(emp.id) ?? [];
       if (visEntries.length > 0 || store.showArchived) {
-        const empList = byEmp.get(emp.id) ?? [];
+        const empList = totalEntries;
         const subCells = visMonths.map(m => {
           const i = monthIdxMap.get(m.key);
           const tot = empList.reduce((s, e) => s + (e.days[i] || 0), 0);
           return { key: m.key, tot };
         });
         rows.push({ rowType: 'sub', key: 'sub-' + emp.id, groupKey: group.key, empId: emp.id, empName: emp.name, subCells });
+      }
+      // addrow only for employees with no entries at all — otherwise use insert-after (📋 button)
+      if (totalEntries.length === 0) {
         rows.push({ rowType: 'addrow', key: 'add-' + emp.id, groupKey: group.key, empId: emp.id, empName: emp.name });
       }
     });
@@ -169,6 +173,7 @@ export function registerStores(Alpine) {
         { id: 'cat-4', name: 'CIP Support',          defaultDays: 0 },
         { id: 'cat-5', name: 'E&C Activity',         defaultDays: 0 },
       ],
+      budgetTolerancePct: 10,
     },
     activeLocations: ['CZ', 'FR', 'DE'],
     employees:       [],
@@ -329,7 +334,7 @@ export function registerStores(Alpine) {
 
     // ── TABLE OPERATIONS ───────────────────────────────────────
     toggleOH(empId) {
-      this.expandedOH[empId] = !this.expandedOH[empId];
+      this.expandedOH = { ...this.expandedOH, [empId]: !this.expandedOH[empId] };
     },
 
     cycleRAG(entryId) {
@@ -344,19 +349,29 @@ export function registerStores(Alpine) {
       }, { entryId, from: cur, to: next }, { type: 'entry', record: this.entries[idx] });
     },
 
-    copyEntry(id) {
+    insertEntryAfter(id) {
+      if (Alpine.store('ui').editingRowId) return;
       const orig = this.entries.find(e => e.id === id);
       if (!orig) return;
-      mutate('copyEntry', () => {
+      // Clear sort so the inserted row appears immediately below the source row
+      this.sortColumn = null;
+      this.sortDirection = 'asc';
+      const tempId = 'temp-' + Date.now();
+      mutate('insertEntryAfter', () => {
         const s = Alpine.store('plan');
-        const newId = s.nextId++;
-        s.entries = [...s.entries, {
-          id: newId, empId: orig.empId, type: orig.type,
-          project: orig.project + ' (copy)', status: orig.status, days: [...orig.days],
-          archived: false
-        }];
-        Alpine.store('ui').editingRowId = newId;
-      }, { sourceEntryId: id, project: orig.project }, null);
+        const idx = s.entries.findIndex(e => e.id === id);
+        const newEntry = {
+          id: tempId, empId: orig.empId, type: 'Project', project: '',
+          status: '', ipm: '', projectUrl: null, ragStatus: null,
+          epsd: null, budgetHours: null,
+          days: new Array(state.months.length).fill(0),
+          archived: false,
+        };
+        s.entries = idx >= 0
+          ? [...s.entries.slice(0, idx + 1), newEntry, ...s.entries.slice(idx + 1)]
+          : [...s.entries, newEntry];
+      }, { afterEntryId: id, empId: orig.empId }, null);
+      Alpine.store('ui').editingRowId = tempId;
     },
 
     archiveEntry(id) {
@@ -436,7 +451,7 @@ export function registerStores(Alpine) {
     },
 
     toggleGroup(key) {
-      this.expandedGroups[key] = !this.expandedGroups[key];
+      this.expandedGroups = { ...this.expandedGroups, [key]: !this.expandedGroups[key] };
       triggerAutoSave();
     },
 

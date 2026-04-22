@@ -142,6 +142,7 @@ export const Storage = {
         if (!('ragStatus'  in entry)) entry.ragStatus  = null;
         if (!('epsd'       in entry)) entry.epsd       = null;
         if (!('projectUrl' in entry)) entry.projectUrl = null;
+        if (!('budgetHours' in entry)) entry.budgetHours = null;
       });
     }
   },
