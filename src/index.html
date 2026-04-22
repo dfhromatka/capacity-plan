@@ -324,8 +324,8 @@
           <template x-for="row in $store.plan.tableData.rows" :key="row.key">
           <tbody>
             <!-- Group header row -->
-            <tr x-show="row.rowType === 'group'"
-              class="row-group" @click="$store.plan.toggleGroup(row.groupKey)">
+            <template x-if="row.rowType === 'group'">
+            <tr class="row-group" @click="$store.plan.toggleGroup(row.groupKey)">
               <td colspan="5" class="row-group__cell">
                 <span class="row-group__label"
                   x-text="(row.isExpanded ? '▼' : '▶') + ' ' + row.label"></span>
@@ -337,8 +337,10 @@
               </template>
               <td></td>
             </tr>
+            </template>
             <!-- Employee header row -->
-            <tr x-show="row.rowType === 'emp' && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-emp">
+            <template x-if="row.rowType === 'emp'">
+            <tr x-show="$store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false" class="row-emp">
               <td class="col-type col-info" colspan="5">
                 <div class="emp-header-row">
                   <button class="emp-name"
@@ -369,8 +371,10 @@
               </template>
               <td></td>
             </tr>
+            </template>
             <!-- Fixed allocation (OH) row -->
-            <tr x-show="row.rowType === 'oh' && !$store.plan.collapseAllEntries && $store.plan.expandedOH[row.empId] && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-oh">
+            <template x-if="row.rowType === 'oh'">
+            <tr x-show="!$store.plan.collapseAllEntries && $store.plan.expandedOH[row.empId] && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-oh">
               <td class="col-type col-info tl"
                 x-text="row.icon + ' ' + row.label"></td>
               <!-- Bank holidays: plain cell; fixed alloc: editable description -->
@@ -395,9 +399,11 @@
               </template>
               <td></td>
             </tr>
+            </template>
             <!-- Entry row -->
-            <tr x-show="row.rowType === 'entry' && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])"
-              x-data="row.rowType === 'entry' ? tableRow(row.id) : {}"
+            <template x-if="row.rowType === 'entry'">
+            <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])"
+              x-data="tableRow(row.id)"
               :class="[row.type === 'Project' ? 'row-project' : row.type === 'Other' ? 'row-other' : 'row-absence', isEditing ? 'row-editing' : '', row.archived ? 'row-archived' : '']"
               @keydown="handleKeydown && handleKeydown($event)">
               <!-- Type -->
@@ -500,8 +506,10 @@
                 </div>
               </td>
             </tr>
+            </template>
             <!-- Sub-total row -->
-            <tr x-show="row.rowType === 'sub' && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-sub">
+            <template x-if="row.rowType === 'sub'">
+            <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-sub">
               <td class="col-type col-info tl sub-label">∑ entries</td>
               <td class="col-proj col-info"></td><td class="col-notes col-info"></td><td class="col-epsd col-info"></td><td class="col-rag col-info"></td>
               <template x-for="cell in row.subCells" :key="cell.key">
@@ -510,8 +518,10 @@
               </template>
               <td></td>
             </tr>
+            </template>
             <!-- Add row button row -->
-            <tr x-show="row.rowType === 'addrow' && $store.ui.editingRowId === null && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-addrow">
+            <template x-if="row.rowType === 'addrow'">
+            <tr x-show="$store.ui.editingRowId === null && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-addrow">
               <td class="col-type col-info addrow-sticky-cell" colspan="5">
                 <button @click="$store.plan.startInlineAdd(row.empId)"
                   class="btn-add-entry"
@@ -522,6 +532,7 @@
               </template>
               <td></td>
             </tr>
+            </template>
           </tbody>
           </template>
       </table>

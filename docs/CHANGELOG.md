@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.14.2] - 2026-04-22
+
+### Fixed — PERF-10: filter/group-by lag (DOM node count)
+
+- **Root cause:** each `<tbody>` in the `x-for="row in tableData.rows"` loop rendered all 6 row-type templates (`group`, `emp`, `oh`, `entry`, `sub`, `addrow`) and hid 5 of them with `x-show`. The complex entry row template alone carries ~124 nodes (13 month cells × ~7 elements each); with ~348 rows in the dataset this produced ~153k avoidable DOM nodes per render.
+- **Fix:** wrapped each row-type `<tr>` in a `<template x-if="row.rowType === '...'">` inside the `<tbody>`. Each `<tbody>` now creates only the one `<tr>` that matches its row type. Expected DOM node count drops from ~200k to ~26k (~6× reduction).
+- The `rowType` property is permanent for a given row object so `x-if` is correct here: `x-show` is reserved for conditions that toggle on the same element (group expand, edit mode, etc.), which are preserved as `x-show` on the `<tr>` itself.
+- Profiling confirmed the bottleneck was Alpine's reactive flush across too many nodes (~1,300ms per filter change), not JS computation (`buildTableData`, `empStats`, etc.).
+- `x-data="row.rowType === 'entry' ? tableRow(row.id) : {}"` simplified to `x-data="tableRow(row.id)"` (the `x-if` now guarantees entry context).
+- `settings.html` confirmed clear — pattern was isolated to `src/index.html`.
+
+---
+
 ## [3.14.1] - 2026-04-22
 
 ### Fixed — ST-02: settings.html inline style extraction

@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-22 (v3.14.1)
+> **Last updated:** 2026-04-22 (v3.14.2)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -29,6 +29,26 @@ Noticeable UI lag on filter change and group-by toggle with 27 employees / 154 e
 - No memoisation of filter results — every keypress reruns from scratch
 
 **Do not fix without profiling first.** Open Chrome DevTools → Performance → record a filter interaction. The flame graph identifies the actual bottleneck.
+
+---
+
+### ARCH-04 — `x-show` used for permanent row-type selection inside `x-for` loops 🟡
+
+**Watch for:** any `x-for` loop that renders multiple different templates per iteration and uses
+`x-show="item.type === 'X'"` to select between them. This is the pattern that caused PERF-10.
+
+**Why it matters:** every iteration renders ALL templates and hides all-but-one with `x-show`.
+For a complex template (e.g. an entry row with 13 month cells), this multiplies DOM nodes by the
+number of template variants even though only one is ever visible per row.
+
+**Rule:** if the property tested in `x-show` is *permanent* for a given item (i.e. an item's type
+never changes while it is in the DOM), use `x-if` instead so that only the matching template is
+created. Reserve `x-show` for conditions that toggle on an existing element (group expand, edit
+mode, visibility filters).
+
+**Fixed instance:** `src/index.html` `tableData.rows` loop — v3.14.2 (2026-04-22).
+**Other locations to check:** none found as of v3.14.2 (`settings.html` clear; all other `x-for`
+loops in `index.html` iterate uniform item types).
 
 ---
 
@@ -93,7 +113,8 @@ Treat as a standalone CSS pass.
 
 | ID | Severity | File(s) | Status |
 |----|----------|---------|--------|
-| PERF-10 | 🟡 Important | `src/js/store.js` | Filter/group-by lag — profile before fixing |
+| PERF-10 | ✅ Fixed v3.14.2 | `src/index.html` | x-if rowType gate — DOM nodes ~200k → ~26k |
+| ARCH-04 | 🟡 Important | any `x-for` with multi-type templates | Watch for; no other instances found v3.14.2 |
 | TOKEN-01 | 🟡 Important | `src/css/design-tokens.css`, `styles.css` | Duplicate aliases + dead tokens — consolidate |
 | CSS-02 | 🟢 Enhancement | `src/css/styles.css`, `src/settings.html` | `.settings-card` → flex+gap |
 | PERF-01–09 | ✅ Fixed v3.12–13 | `src/js/` | Performance pass complete |
