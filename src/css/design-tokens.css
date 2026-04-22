@@ -75,8 +75,6 @@
   --color-transparent: transparent;
   
   /* Background Colors */
-  --color-bg-page: #f3f4f6;           /* Page background */
-  --color-bg-card: #ffffff;           /* Card/panel backgrounds */
   --color-bg-hover: #f9fafb;          /* Hover backgrounds */
   --color-bg-modal: rgba(0, 0, 0, 0.45); /* Modal overlay */
   
@@ -248,9 +246,6 @@
      ───────────────────────────────────────────────────────────── */
 
   /* Color */
-  --color-accent:        var(--color-primary);           /* #2563eb */
-  --color-accent-hover:  var(--color-primary-hover);     /* #1d4ed8 */
-  --color-accent-subtle: var(--color-primary-light);     /* #3b82f6 */
   --color-surface:       var(--color-white);             /* #ffffff — modal/card bg */
   --color-surface-alt:   var(--color-gray-50);           /* #f8fafc — alternate surface */
   --color-border:        var(--color-gray-200);          /* #e2e8f0 — default divider */
@@ -258,24 +253,13 @@
   --color-text-muted:    var(--color-gray-neutral-500);  /* #6b7280 — muted/label text */
   --color-text-inverse:  var(--color-white);             /* #ffffff — text on dark bg */
   --color-text-secondary: var(--color-gray-neutral-500); /* #6b7280 — secondary/supporting text */
-  --color-background:    var(--color-gray-100);          /* #f1f5f9 — page background */
   --color-surface-raised: var(--color-gray-neutral-50);  /* #fafafa — elevated panel/card bg */
-
-  /* Spacing — BEM system uses --spacing-* instead of --space-* */
-  --spacing-xs: var(--space-1);   /* 4px  */
-  --spacing-sm: var(--space-2);   /* 8px  */
-  --spacing-md: var(--space-3);   /* 12px */
-  --spacing-lg: var(--space-4);   /* 16px */
 
   /* Font sizes — BEM system */
   --font-size-xs: var(--text-sm);    /* 10px — small labels, btn--sm */
   --font-size-sm: var(--text-md);    /* 12px — secondary text, .btn base */
   --font-size-md: var(--text-xl);    /* 14px — modal titles, primary body */
   --font-size-base: var(--text-md);  /* 12px — base body size (alias for --text-md) */
-
-  /* Font weights — BEM system */
-  --font-weight-medium:   var(--font-medium);    /* 500 */
-  --font-weight-semibold: var(--font-semibold);  /* 600 */
 
   /* Duration — BEM system */
   --duration-fast: var(--transition-fast);       /* 0.1s */

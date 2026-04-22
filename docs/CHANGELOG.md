@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.14.3] - 2026-04-22
+
+### Fixed — TOKEN-01: design token alias and dead token consolidation
+
+- **Dead tokens removed** from `src/css/design-tokens.css`: `--color-bg-page`, `--color-bg-card`, `--color-background` (0 uses in styles.css; superseded by canonical tokens)
+- **Spacing aliases migrated** (~54 replacements in `styles.css`): `--spacing-xs/sm/md/lg` → `--space-1/2/3/4`; alias definitions removed from `design-tokens.css`; 5 redundant fallback values cleaned up (`var(--space-1, 4px)` → `var(--space-1)`)
+- **Font-weight aliases migrated** (7 replacements): `--font-weight-medium/semibold` → `--font-medium/semibold`; alias definitions removed
+- **Color-accent aliases migrated** (26 replacements): `--color-accent` → `--color-primary`, `--color-accent-hover` → `--color-primary-hover`, `--color-accent-subtle` → `--color-primary-light`; alias definitions removed
+- `docs/DESIGN_SYSTEM.md` gray-scale rule already documented at line 99 — no change needed
+- Net: 12 alias/dead token definitions removed from `design-tokens.css`; one token per distinct design decision
+
+---
+
 ## [3.14.2] - 2026-04-22
 
 ### Fixed — PERF-10: filter/group-by lag (DOM node count)

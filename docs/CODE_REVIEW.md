@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-22 (v3.14.2)
+> **Last updated:** 2026-04-22 (v3.14.3)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -16,21 +16,6 @@
 ---
 
 ## Open Issues
-
-### PERF-10 — Filter and group-by lag on production-scale datasets 🟡
-
-**Files:** `src/js/store.js` (`visibleEmployees` getter, `buildTableData`)
-
-Noticeable UI lag on filter change and group-by toggle with 27 employees / 154 entries.
-
-**Suspected causes (unverified — profile before fixing):**
-- `visibleEmployees` runs multiple `.filter()` chains in sequence
-- `buildTableData` iterates all rows including entries for hidden employees
-- No memoisation of filter results — every keypress reruns from scratch
-
-**Do not fix without profiling first.** Open Chrome DevTools → Performance → record a filter interaction. The flame graph identifies the actual bottleneck.
-
----
 
 ### ARCH-04 — `x-show` used for permanent row-type selection inside `x-for` loops 🟡
 
@@ -55,35 +40,6 @@ loops in `index.html` iterate uniform item types).
 ### TOKEN-01 — Design token system has duplicate aliases and dead tokens 🟡
 
 **Files:** `src/css/design-tokens.css`, `src/css/styles.css`
-
-Audit (2026-04-22). Three undefined tokens added as immediate fix; remaining debt:
-
-**True byte-for-byte duplicates (safe to consolidate):**
-
-| Alias family | Resolves to | Alias uses | Primary uses |
-|---|---|---|---|
-| `--spacing-xs/sm/md/lg` | `--space-1/2/3/4` | 58 | 161 |
-| `--font-weight-medium/semibold` | `--font-medium/semibold` | 7 | 63 |
-| `--color-accent`, `--color-accent-hover`, `--color-accent-subtle` | `--color-primary`, `-hover`, `-light` | 28 | 18 |
-
-**Dead tokens (0 uses in `styles.css`):**
-- `--color-bg-page` (#f3f4f6) — superseded by `--color-gray-neutral-100`
-- `--color-bg-card` (#ffffff) — superseded by `--color-white` / `--color-surface`
-- `--color-background` (var(--color-gray-100)) — resolves to #f1f5f9, different from `--color-bg-page`
-
-**Two-gray-scale system — justified but undocumented:**
-`--color-gray-*` (Slate, 81 uses) and `--color-gray-neutral-*` (Neutral, 83 uses) are genuinely
-different hex values. Semantic split: Neutral for text/input UI; Slate for structural chrome.
-
-**Remediation order:**
-1. ~~Define `--color-surface-raised`, `--font-size-base`, `--color-text-secondary`~~ ✅ Done
-2. Remove `--color-bg-page`, `--color-bg-card`, `--color-background` (dead code)
-3. Migrate `--spacing-*` → `--space-*` (~58 replacements)
-4. Migrate `--font-weight-*` → `--font-*` (~7 replacements)
-5. Pick `--color-accent` or `--color-primary` as canonical; migrate the other (~46 replacements)
-6. Add gray-scale usage guidance to `docs/DESIGN_SYSTEM.md`
-
-**Guiding principle:** one token per distinct design decision — no redundant aliases.
 
 ---
 
@@ -115,7 +71,7 @@ Treat as a standalone CSS pass.
 |----|----------|---------|--------|
 | PERF-10 | ✅ Fixed v3.14.2 | `src/index.html` | x-if rowType gate — DOM nodes ~200k → ~26k |
 | ARCH-04 | 🟡 Important | any `x-for` with multi-type templates | Watch for; no other instances found v3.14.2 |
-| TOKEN-01 | 🟡 Important | `src/css/design-tokens.css`, `styles.css` | Duplicate aliases + dead tokens — consolidate |
+| TOKEN-01 | ✅ Fixed v3.14.3 | `src/css/design-tokens.css`, `styles.css` | 12 alias/dead tokens removed; ~87 replacements |
 | CSS-02 | 🟢 Enhancement | `src/css/styles.css`, `src/settings.html` | `.settings-card` → flex+gap |
 | PERF-01–09 | ✅ Fixed v3.12–13 | `src/js/` | Performance pass complete |
 | HTML-01 | ✅ Fixed 2026-04-22 | `src/settings.html`, `src/index.html` | Nested `<tbody>` pattern fixed |
