@@ -1,0 +1,282 @@
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS - Single Source of Truth for UI Consistency
+   ═══════════════════════════════════════════════════════════════
+   
+   This file defines all design decisions as CSS variables.
+   ALWAYS use these variables instead of hardcoded values.
+   
+   Last Updated: March 26, 2026
+   Version: 1.3.1
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────
+     COLOR PALETTE (Tailwind-based)
+     ───────────────────────────────────────────────────────────── */
+  
+  /* Primary Colors */
+  --color-primary: #2563eb;           /* blue-600 - Primary actions, links */
+  --color-primary-hover: #1d4ed8;     /* blue-700 - Primary hover state */
+  --color-primary-light: #3b82f6;     /* blue-500 - Charts, icons */
+  --color-primary-bg: #eff6ff;        /* blue-50 - Light backgrounds */
+  --color-primary-border: #bfdbfe;    /* blue-200 - Borders */
+  --color-primary-focus: #60a5fa;     /* blue-400 - Focus rings */
+  --color-primary-border-strong: #93c5fd; /* blue-300 - Stronger borders */
+  --color-primary-bg-light: #f0f9ff;      /* sky-50   - very light blue hover bg */
+  --color-primary-bg-active: #dbeafe;     /* blue-100 - selected/active item hover bg */
+  
+  /* Success Colors (Green) */
+  --color-success: #22c55e;           /* green-500 - Success states */
+  --color-success-dark: #15803d;      /* green-700 - Dark success text */
+  --color-success-bg: #dcfce7;        /* green-100 - Success backgrounds */
+  --color-success-light: #86efac;     /* green-300 - Charts, indicators */
+  
+  /* Warning Colors (Amber/Yellow) */
+  --color-warning: #f59e0b;           /* amber-500 - Warning states */
+  --color-warning-dark: #92400e;      /* amber-800 - Dark warning text */
+  --color-warning-bg: #fef3c7;        /* amber-100 - Warning backgrounds */
+  --color-warning-light: #fcd34d;     /* amber-300 - Borders */
+  --color-warning-pale: #fffbeb;      /* amber-50 - Absence rows */
+  
+  /* Danger Colors (Red) */
+  --color-danger: #ef4444;            /* red-500 - Danger, delete actions */
+  --color-danger-dark: #b91c1c;       /* red-700 - Dark danger text */
+  --color-danger-bg: #fee2e2;         /* red-100 - Danger backgrounds */
+  --color-danger-light: #fca5a5;      /* red-300 - Borders */
+  --color-danger-error: #dc2626;      /* red-600 - Form errors */
+  --color-danger-pale: #f87171;       /* red-400 - Lighter red */
+  --color-danger-bg-subtle: #fef2f2;  /* red-50  - very light danger background */
+  --color-danger-border: #fecaca;     /* red-200 - light danger border */
+  
+  /* Neutral Grays (Slate scale) */
+  --color-gray-50: #f8fafc;           /* Lightest gray - thead bg */
+  --color-gray-100: #f1f5f9;          /* Very light - scrollbar, grid */
+  --color-gray-200: #e2e8f0;          /* Light - borders */
+  --color-gray-300: #cbd5e1;          /* Medium-light - disabled, scrollbar thumb */
+  --color-gray-400: #94a3b8;          /* Medium - secondary text */
+  --color-gray-500: #64748b;          /* Medium-dark - tertiary text */
+  --color-gray-600: #475569;          /* Dark - body text */
+  --color-gray-700: #374151;          /* Darker - headings */
+  --color-gray-800: #1e293b;          /* Very dark - emphasis text */
+  --color-gray-900: #111827;          /* Darkest - primary headings */
+  
+  /* Additional Grays (for legacy compatibility) */
+  --color-gray-neutral-50: #fafafa;   /* Neutral gray for OH rows */
+  --color-gray-neutral-100: #f3f4f6;  /* Neutral backgrounds */
+  --color-gray-neutral-200: #e5e7eb;  /* Neutral borders */
+  --color-gray-neutral-300: #d1d5db;  /* Input borders */
+  --color-gray-neutral-400: #9ca3af;  /* Placeholder text */
+  --color-gray-neutral-500: #6b7280;  /* Label text */
+  --color-gray-bg: #f9fafb;           /* Light row backgrounds */
+  
+  /* Semantic Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  
+  /* Background Colors */
+  --color-bg-page: #f3f4f6;           /* Page background */
+  --color-bg-card: #ffffff;           /* Card/panel backgrounds */
+  --color-bg-hover: #f9fafb;          /* Hover backgrounds */
+  --color-bg-modal: rgba(0, 0, 0, 0.45); /* Modal overlay */
+  
+  /* Row Type Colors */
+  --color-row-emp: #eff6ff;           /* Employee header row */
+  --color-row-emp-border: #3b82f6;
+  --color-row-oh: #fafafa;            /* Fixed allocation rows */
+  --color-row-project: #f0f7ff;       /* Project rows */
+  --color-row-other: #f9fafb;         /* Other type rows */
+  --color-row-absence: #fffbeb;       /* Absence rows */
+  --color-row-sub: #f8fafc;           /* Subtotal rows */
+  --color-info-col-bg: var(--color-gray-50); /* Header tint for info (non-month) columns */
+  
+  /* ─────────────────────────────────────────────────────────────
+     TYPOGRAPHY
+     ───────────────────────────────────────────────────────────── */
+  
+  /* Font Family */
+  --font-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* Font Sizes (consistent scale) */
+  --text-xs: 9px;                     /* Smallest - month card details */
+  --text-sm: 10px;                    /* Small - badges, labels, headers */
+  --text-base: 11px;                  /* Base - table cells, buttons */
+  --text-md: 12px;                    /* Medium - forms, most text */
+  --text-lg: 13px;                    /* Large - emphasis, form inputs */
+  --text-xl: 14px;                    /* Extra large - buttons, body */
+  --text-2xl: 16px;                   /* Headings level 3 */
+  --text-3xl: 18px;                   /* Headings level 2, modal titles */
+  --text-4xl: 20px;                   /* Headings level 1 */
+  --text-5xl: 24px;                   /* Page titles */
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+  
+  /* Letter Spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.06em;
+  
+  /* ─────────────────────────────────────────────────────────────
+     SPACING (4px scale)
+     ───────────────────────────────────────────────────────────── */
+  
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  
+  /* Common Padding/Margin Values */
+  --padding-cell: 7px 9px;            /* Table cell padding */
+  --padding-button: 10px 16px;        /* Modal action button padding (Save / Cancel) */
+  --padding-button-sm: 2px 8px;       /* Small inline button padding */
+  --padding-button-toolbar: 6px 12px; /* Toolbar control padding (filter, ctrl-btn, ctrl-select) */
+  --padding-input: 8px 12px;          /* Input field padding */
+  --padding-modal: 24px;              /* Modal padding */
+
+  /* Derived component sizes */
+  --toolbar-ctrl-height: 27px;        /* Normalised height: font(13) + padding(12) + border(2) */
+  
+  /* ─────────────────────────────────────────────────────────────
+     BORDERS & RADIUS
+     ───────────────────────────────────────────────────────────── */
+  
+  /* Border Widths */
+  --border-thin: 1px;
+  --border-medium: 1.5px;
+  --border-thick: 2px;
+  --border-extra-thick: 3px;
+  --border-heavy: 4px;
+  
+  /* Border Radius */
+  --radius-sm: 2px;                   /* Smallest radius */
+  --radius-base: 4px;                 /* Base radius - inputs, buttons */
+  --radius-md: 6px;                   /* Medium radius */
+  --radius-lg: 8px;                   /* Large radius - modals, cards */
+  --radius-xl: 10px;                  /* Extra large radius */
+  --radius-2xl: 14px;                 /* Modal radius */
+  --radius-full: 9999px;              /* Pill/circular */
+  
+  /* ─────────────────────────────────────────────────────────────
+     SHADOWS
+     ───────────────────────────────────────────────────────────── */
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-base: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.3);
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.12); /* Dropdown / floating panel */
+  
+  /* Focus Shadows */
+  --shadow-focus-primary: 0 0 0 3px var(--color-primary-border);
+  --shadow-focus-blue: 0 0 0 3px #bfdbfe;
+  --shadow-focus-danger: 0 0 0 3px #fca5a5;
+  --shadow-focus-input: 0 0 0 3px #dbeafe;
+  
+  /* ─────────────────────────────────────────────────────────────
+     TRANSITIONS
+     ───────────────────────────────────────────────────────────── */
+  
+  --transition-fast: 0.1s;
+  --transition-base: 0.2s;
+  --transition-slow: 0.3s;
+  
+  --transition-all: all 0.2s ease;
+  --transition-colors: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  --transition-transform: transform 0.2s ease;
+  
+  /* ─────────────────────────────────────────────────────────────
+     COMPONENT-SPECIFIC
+     ───────────────────────────────────────────────────────────── */
+  
+  /* Table — fixed layout, exact column widths, 13 visible months */
+  --col-type-width: 110px;
+  --col-proj-width: 168px;
+  --col-rag-width: 50px;
+  --col-epsd-width: 90px;
+  --col-notes-width: 222px;
+  --col-month-width: 72px;
+  --col-del-width: 56px;
+  /* Scrollbar */
+  --scrollbar-height: 6px;
+  --scrollbar-thumb-radius: 3px;
+  
+  /* Modal */
+  --modal-width: 460px;
+  --modal-max-width: 95vw;
+  --modal-max-height: 90vh;
+  
+  /* Input */
+  --input-height: 36px;
+  --input-inline-width: 52px;
+  --input-config-width: 54px;
+  
+  /* Z-Index Scale */
+  --z-base: 1;
+  --z-sticky: 2;
+  --z-sticky-header: 3;
+  --z-dropdown: 10;
+  --z-modal: 200;
+
+  /* ─────────────────────────────────────────────────────────────
+     SEMANTIC ALIASES  (BEM modal / button system — v2.1.9+)
+     Maps the canonical token names used by .modal__*, .btn--*,
+     and .form-field to their palette equivalents above.
+     Do NOT reference these in new legacy-system rules — use the
+     primary-colour tokens directly.  New BEM work uses these.
+     ───────────────────────────────────────────────────────────── */
+
+  /* Color */
+  --color-accent:        var(--color-primary);           /* #2563eb */
+  --color-accent-hover:  var(--color-primary-hover);     /* #1d4ed8 */
+  --color-accent-subtle: var(--color-primary-light);     /* #3b82f6 */
+  --color-surface:       var(--color-white);             /* #ffffff — modal/card bg */
+  --color-surface-alt:   var(--color-gray-50);           /* #f8fafc — alternate surface */
+  --color-border:        var(--color-gray-200);          /* #e2e8f0 — default divider */
+  --color-text-primary:  var(--color-gray-900);          /* #111827 — primary text */
+  --color-text-muted:    var(--color-gray-neutral-500);  /* #6b7280 — muted/label text */
+  --color-text-inverse:  var(--color-white);             /* #ffffff — text on dark bg */
+  --color-text-secondary: var(--color-gray-neutral-500); /* #6b7280 — secondary/supporting text */
+  --color-background:    var(--color-gray-100);          /* #f1f5f9 — page background */
+  --color-surface-raised: var(--color-gray-neutral-50);  /* #fafafa — elevated panel/card bg */
+
+  /* Spacing — BEM system uses --spacing-* instead of --space-* */
+  --spacing-xs: var(--space-1);   /* 4px  */
+  --spacing-sm: var(--space-2);   /* 8px  */
+  --spacing-md: var(--space-3);   /* 12px */
+  --spacing-lg: var(--space-4);   /* 16px */
+
+  /* Font sizes — BEM system */
+  --font-size-xs: var(--text-sm);    /* 10px — small labels, btn--sm */
+  --font-size-sm: var(--text-md);    /* 12px — secondary text, .btn base */
+  --font-size-md: var(--text-xl);    /* 14px — modal titles, primary body */
+  --font-size-base: var(--text-md);  /* 12px — base body size (alias for --text-md) */
+
+  /* Font weights — BEM system */
+  --font-weight-medium:   var(--font-medium);    /* 500 */
+  --font-weight-semibold: var(--font-semibold);  /* 600 */
+
+  /* Duration — BEM system */
+  --duration-fast: var(--transition-fast);       /* 0.1s */
+}

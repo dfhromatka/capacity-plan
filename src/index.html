@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capacity Plan</title>
+<link rel="stylesheet" href="./css/design-tokens.css">
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body x-data class="app-page">
+
+<!-- ── #app-top: title bar ── -->
+<div id="app-top">
+
+  <div class="page-header">
+    <h1 class="page-title"
+        x-text="$store.plan.planSettings.planName || 'Capacity Plan'">Capacity Plan</h1>
+
+    <div class="page-header__actions">
+      <!-- Settings -->
+      <button @click="window.location.href='settings.html'" class="ctrl-btn ctrl-btn--cta">
+        ⚙️ Settings
+      </button>
+    </div>
+  </div>
+
+</div><!-- /#app-top -->
+
+<div class="content-grid">
+
+<!-- ── FILTERS SIDEBAR ──────────────────────────────────── -->
+<div class="sidebar-filters">
+  <div class="sidebar-filters__title">
+    Filters
+    <button x-show="$store.plan.hasActiveFilters" x-cloak
+      @click="$store.plan.clearFilters()" class="filter-clear-btn">✕</button>
+  </div>
+
+  <div class="sidebar-filters__row">
+    <div class="sidebar-filters__group">
+      <div x-data="customDropdown('ism')" @click.outside="close()" class="filter-dropdown">
+        <button type="button" @click="toggle()" :aria-expanded="isOpen"
+          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
+          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
+        </button>
+        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
+          <div class="filter-panel-search">
+            <input type="text" x-ref="ddSearch" x-model="search" placeholder="Search…"
+              autocomplete="off" @keydown.arrow-down.prevent="focusFirstOpt()">
+          </div>
+          <div class="filter-panel-opts">
+            <template x-for="(opt, idx) in visibleOpts" :key="opt.value">
+              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
+                :aria-selected="opt.value === currentVal" class="filter-opt">
+                <span x-text="opt.label"></span>
+                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-filters__group">
+      <div x-data="customDropdown('ipm')" @click.outside="close()" class="filter-dropdown">
+        <button type="button" @click="toggle()" :aria-expanded="isOpen"
+          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
+          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
+        </button>
+        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
+          <div class="filter-panel-search">
+            <input type="text" x-ref="ddSearch" x-model="search" placeholder="Search…"
+              autocomplete="off" @keydown.arrow-down.prevent="focusFirstOpt()">
+          </div>
+          <div class="filter-panel-opts">
+            <template x-for="(opt, idx) in visibleOpts" :key="opt.value">
+              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
+                :aria-selected="opt.value === currentVal" class="filter-opt">
+                <span x-text="opt.label"></span>
+                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-filters__group">
+      <div x-data="customDropdown('location')" @click.outside="close()" class="filter-dropdown">
+        <button type="button" @click="toggle()" :aria-expanded="isOpen"
+          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
+          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
+        </button>
+        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
+          <div class="filter-panel-search">
+            <input type="text" x-ref="ddSearch" x-model="search" placeholder="Search…"
+              autocomplete="off" @keydown.arrow-down.prevent="focusFirstOpt()">
+          </div>
+          <div class="filter-panel-opts">
+            <template x-for="(opt, idx) in visibleOpts" :key="opt.value">
+              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
+                :aria-selected="opt.value === currentVal" class="filter-opt">
+                <span x-text="opt.label"></span>
+                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-filters__row sidebar-filters__row--compact">
+    <div class="sidebar-filters__group">
+      <div x-data="toolbarDropdown('utilization')" @click.outside="close()" class="filter-dropdown">
+        <button type="button" @click="toggle()" :aria-expanded="isOpen"
+          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
+          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
+        </button>
+        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
+          <div class="filter-panel-opts">
+            <template x-for="(opt, idx) in opts" :key="opt.value">
+              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
+                :aria-selected="opt.value === currentVal" class="filter-opt">
+                <span x-text="opt.label"></span>
+                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-filters__group">
+      <div x-data="toolbarDropdown('groupBy')" @click.outside="close()" class="filter-dropdown">
+        <button type="button" @click="toggle()" :aria-expanded="isOpen" class="filter-btn">
+          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
+        </button>
+        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
+          <div class="filter-panel-opts">
+            <template x-for="(opt, idx) in opts" :key="opt.value">
+              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
+                :aria-selected="opt.value === currentVal" class="filter-opt">
+                <span x-text="opt.label"></span>
+                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-filters__group--icons">
+      <span @click="$store.plan.toggleCollapseAll()"
+        :title="$store.plan.collapseAllEntries ? 'Show detail rows' : 'Show summary'"
+        :class="{'filter-icon--active': $store.plan.collapseAllEntries}"
+        :aria-pressed="$store.plan.collapseAllEntries"
+        role="button" tabindex="0"
+        @keydown.enter.prevent="$store.plan.toggleCollapseAll()"
+        @keydown.space.prevent="$store.plan.toggleCollapseAll()"
+        class="filter-icon"
+        x-text="$store.plan.collapseAllEntries ? '⊞' : '⊟'">
+      </span>
+      <span @click="$store.plan.toggleShowArchived()"
+        title="Show archived rows"
+        :class="{'filter-icon--active': $store.plan.showArchived}"
+        :aria-pressed="$store.plan.showArchived"
+        role="button" tabindex="0"
+        @keydown.enter.prevent="$store.plan.toggleShowArchived()"
+        @keydown.space.prevent="$store.plan.toggleShowArchived()"
+        class="filter-icon">
+        📦
+      </span>
+    </div>
+  </div>
+
+</div>
+
+  <!-- Summary cards -->
+  <div class="summary-section" x-show="$store.plan.showAvailCards">
+    <div class="summary-card">
+      <template x-if="$store.plan.visibleEmployees.length === 0">
+        <p class="summary-empty">No employees match the current filter.</p>
+      </template>
+      <template x-if="$store.plan.visibleEmployees.length > 0">
+        <div class="summary-body">
+          <div class="summary-label">
+            <button class="summary-toggle-btn"
+                    @click="$store.plan.toggleAvailCards()"
+                    :aria-expanded="$store.plan.showAvailCards"
+                    aria-controls="chart-container">
+              Monthly Availability
+            </button>
+            &nbsp;<span x-text="$store.plan.cardSubtitle"></span>
+          </div>
+          <div class="card-strip">
+            <template x-for="card in $store.plan.cardData" :key="card.key">
+              <div class="month-card" :style="{background: card.bg, borderColor: card.bd}">
+                <div class="card-month-label" x-text="card.short"></div>
+                <div class="card-value" :style="{color: card.tx}" x-text="card.availText"></div>
+                <div class="card-pct"  :style="{color: card.tx}" x-text="card.pctText"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+<template x-if="!$store.plan.showAvailCards">
+  <div id="chart-container">
+    <div class="chart-card">
+      <div class="chart-card__header">
+        <div class="chart-card__title-row">
+          <button class="summary-toggle-btn chart-card__title-toggle"
+                  @click="$store.plan.toggleAvailCards()"
+                  :aria-expanded="!$store.plan.showAvailCards"
+                  aria-controls="chart-container">
+            Capacity Breakdown by Month
+          </button>
+          <span class="chart-card__subtitle" x-text="$store.plan.cardSubtitle"></span>
+        </div>
+        <div class="chart-card__legend">
+          <span><span class="legend-swatch legend-swatch--projects"></span>Projects</span>
+          <span><span class="legend-swatch legend-swatch--fixed"></span>Fixed Allocation</span>
+          <span><span class="legend-swatch legend-swatch--absences"></span>Absences</span>
+          <span><span class="legend-swatch legend-swatch--available"></span>Available</span>
+        </div>
+      </div>
+
+      <!-- Alpine CSS bar chart -->
+      <div class="chart-plot">
+        <template x-for="bar in $store.plan.chartData" :key="bar.key">
+          <div class="chart-col" x-data="{ tip: false }" @mouseenter="tip = true" @mouseleave="tip = false">
+            <!-- Hover tooltip -->
+            <div class="chart-tip" x-show="tip" x-cloak>
+              <div class="chart-tip__month" x-text="bar.label"></div>
+              <div class="chart-tip__row">
+                <span class="chart-tip__dot chart-tip__dot--proj"></span>Projects
+                <span x-text="bar.proj.toFixed(1) + 'd'"></span>
+              </div>
+              <div class="chart-tip__row">
+                <span class="chart-tip__dot chart-tip__dot--fixed"></span>Fixed
+                <span x-text="bar.oh.toFixed(1) + 'd'"></span>
+              </div>
+              <div class="chart-tip__row">
+                <span class="chart-tip__dot chart-tip__dot--abs"></span>Absences
+                <span x-text="bar.abs.toFixed(1) + 'd'"></span>
+              </div>
+              <div class="chart-tip__row">
+                <span class="chart-tip__dot chart-tip__dot--avail"></span>Available
+                <span x-text="bar.avail.toFixed(1) + 'd'"></span>
+              </div>
+              <div class="chart-tip__total" x-text="bar.wd + 'd capacity'"></div>
+            </div>
+            <!-- Bar -->
+            <div class="chart-col__bar">
+              <div class="chart-col__stack" :style="{ height: bar.heightPct + '%' }">
+                <!-- Segments stacked bottom→top: proj, fixed, abs, avail -->
+                <div class="chart-seg chart-seg--avail"  :style="{ flex: bar.avail }"></div>
+                <div class="chart-seg chart-seg--abs"    :style="{ flex: bar.abs   }"></div>
+                <div class="chart-seg chart-seg--fixed"  :style="{ flex: bar.oh    }"></div>
+                <div class="chart-seg chart-seg--proj"   :style="{ flex: bar.proj  }"></div>
+              </div>
+            </div>
+            <div class="chart-col__label" x-text="bar.short"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ── TABLE ──────────────────────────────────────────────── -->
+<div id="app-table" x-show="$store.plan.tableData.rows.length > 0">
+  <div class="table-card">
+    <div class="table-scroll">
+      <table>
+        <colgroup>
+          <col class="col-type">
+          <col class="col-proj">
+          <col class="col-notes">
+          <col class="col-epsd">
+          <col class="col-rag">
+          <template x-for="m in $store.plan.visibleMonths" :key="m.key"><col class="col-month"></template>
+          <col class="col-del">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-type col-info tl sortable" @click="$store.plan.toggleSort('empName')" title="Sort by employee name">
+              Type <span x-text="$store.plan.sortColumn === 'empName' ? ($store.plan.sortDirection === 'asc' ? '↑' : '↓') : ''"></span>
+            </th>
+            <th class="col-proj col-info tl sortable" @click="$store.plan.toggleSort('project')">
+              Project / Activity <span x-text="$store.plan.sortColumn === 'project' ? ($store.plan.sortDirection === 'asc' ? '↑' : '↓') : ''"></span>
+            </th>
+            <th class="col-notes col-info tl sortable" @click="$store.plan.toggleSort('status')">
+              Status / Notes <span x-text="$store.plan.sortColumn === 'status' ? ($store.plan.sortDirection === 'asc' ? '↑' : '↓') : ''"></span>
+            </th>
+            <th class="col-epsd col-info" title="Estimated Production Site Date">
+              <div class="col-header-label">EPSD</div>
+            </th>
+            <th class="col-rag col-info" title="RAG Status (Red/Amber/Green)">
+              <div class="col-header-label">RAG</div>
+            </th>
+            <template x-for="mth in $store.plan.tableData.mthHeaders" :key="mth.key">
+              <th class="col-month text-center">
+                <div class="mth-head" x-text="mth.short"></div>
+                <div class="mth-days" x-text="mth.daysLabel"></div>
+                <div class="mth-bar" :style="{width: mth.utilPct + '%', background: mth.utilColor}"></div>
+              </th>
+            </template>
+            <th class="col-del">
+              <div class="month-nav">
+                <button @click="$store.plan.panMonths(-1)"
+                        :disabled="!$store.plan.canPanBack"
+                        class="month-nav__btn" aria-label="Previous month">‹</button>
+                <button @click="$store.plan.panMonths(1)"
+                        :disabled="!$store.plan.canPanForward"
+                        class="month-nav__btn" aria-label="Next month">›</button>
+              </div>
+            </th>
+          </tr>
+        </thead>
+          <template x-for="row in $store.plan.tableData.rows" :key="row.key">
+          <tbody>
+            <!-- Group header row -->
+            <tr x-show="row.rowType === 'group'"
+              class="row-group" @click="$store.plan.toggleGroup(row.groupKey)">
+              <td colspan="5" class="row-group__cell">
+                <span class="row-group__label"
+                  x-text="(row.isExpanded ? '▼' : '▶') + ' ' + row.label"></span>
+                <span x-show="!row.isExpanded && row.groupStats" class="row-group__stats"
+                  x-text="row.groupStats ? row.groupStats.count + ' employee' + (row.groupStats.count !== 1 ? 's' : '') + ' · ' + row.groupStats.avgUtil + '% utilized' : ''"></span>
+              </td>
+              <template x-for="mth in $store.plan.tableData.mthHeaders" :key="mth.key">
+                <td></td>
+              </template>
+              <td></td>
+            </tr>
+            <!-- Employee header row -->
+            <tr x-show="row.rowType === 'emp' && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-emp">
+              <td class="col-type col-info" colspan="5">
+                <div class="emp-header-row">
+                  <button class="emp-name"
+                    :class="{'emp-name--expanded': $store.plan.collapseAllEntries && $store.plan.expandedInSummary[row.emp.id]}"
+                    @click="$store.plan.collapseAllEntries && $store.plan.toggleExpandInSummary(row.emp.id)"
+                    :aria-expanded="$store.plan.collapseAllEntries ? !!$store.plan.expandedInSummary[row.emp.id] : null"
+                    :title="$store.plan.collapseAllEntries ? (($store.plan.expandedInSummary[row.emp.id] ? 'Collapse' : 'Expand') + ' ' + row.emp.name) : ''">
+                    <span x-text="row.flag + ' ' + row.emp.name"></span>
+                    <span x-show="row.availPct !== null" class="emp-avail-pct"
+                      x-text="' (' + row.availPct + '%)'"></span>
+                    <span x-show="row.futureAvailPct !== null" class="emp-avail-future"
+                      x-text="' (' + row.futureAvailLabel + ')'"></span>
+                  </button>
+                  <div class="emp-header-actions">
+                    <button @click="$store.plan.toggleOH(row.emp.id)"
+                      class="btn-oh-toggle"
+                      x-text="($store.plan.expandedOH[row.emp.id] ? '▼' : '▶') + ' Fixed Allocation'"></button>
+                    <button @click="$store.modal.open('empEdit', { empId: row.emp.id })"
+                      class="btn-emp-edit">✏️ Edit</button>
+                  </div>
+                </div>
+              </td>
+              <template x-for="cell in row.availCells" :key="cell.key">
+                <td class="col-month" :class="cell.cls">
+                  <div class="avail-day-val" x-text="cell.sign + cell.avail.toFixed(cell.avail % 1 === 0 ? 0 : 1) + 'd'"></div>
+                  <div class="avail-day-pct" x-text="(cell.pct * 100).toFixed(0) + '%'"></div>
+                </td>
+              </template>
+              <td></td>
+            </tr>
+            <!-- Fixed allocation (OH) row -->
+            <tr x-show="row.rowType === 'oh' && !$store.plan.collapseAllEntries && $store.plan.expandedOH[row.empId] && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-oh">
+              <td class="col-type col-info tl"
+                x-text="row.icon + ' ' + row.label"></td>
+              <!-- Bank holidays: plain cell; fixed alloc: editable description -->
+              <td x-show="row.descField === null" class="col-proj col-info tl oh-bank-cell"></td>
+              <td x-show="row.descField !== null" class="col-proj col-info tl oh-desc-cell"
+                x-data="row.descField ? fixedAllocDesc(row.empId, row.descField) : {editing:false,display:'',startEdit(){},save(){},cancel(){}}"
+                :class="{'editable': !editing}" @click="!editing && startEdit()">
+                <span x-show="!editing && display" x-text="display"></span>
+                <span x-show="!editing && !display" class="oh-desc-placeholder">Click to add description</span>
+                <input x-show="editing" x-ref="descInput" type="text" x-model="value"
+                  @blur="save()" @keydown.enter.prevent="save()" @keydown.escape.prevent="cancel()"
+                  :tabindex="editing ? 0 : -1"
+                  class="oh-desc-input">
+              </td>
+              <td class="col-notes col-info row-oh"
+                x-text="row.daysPerMonth !== null ? row.daysPerMonth + 'd/month' : ''"></td>
+              <td class="col-epsd col-info"></td>
+              <td class="col-rag col-info"></td>
+              <template x-for="cell in row.cells" :key="cell.key">
+                <td class="col-month oh-month-cell"
+                  x-text="cell.val > 0 ? cell.val : '—'"></td>
+              </template>
+              <td></td>
+            </tr>
+            <!-- Entry row -->
+            <tr x-show="row.rowType === 'entry' && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])"
+              x-data="row.rowType === 'entry' ? tableRow(row.id) : {}"
+              :class="[row.type === 'Project' ? 'row-project' : row.type === 'Other' ? 'row-other' : 'row-absence', isEditing ? 'row-editing' : '', row.archived ? 'row-archived' : '']"
+              @keydown="handleKeydown && handleKeydown($event)">
+              <!-- Type -->
+              <td class="col-type col-info tl">
+                <span x-show="!isEditing"
+                  :class="row.type === 'Project' ? 'badge badge-project' : row.type === 'Other' ? 'badge badge-other' : 'badge badge-absence'"
+                  class="badge" x-text="row.type" @click="startEdit && startEdit()"></span>
+                <select x-show="isEditing" x-model="editType" class="inline-edit entry-type-select">
+                  <option value="Project">Project</option>
+                  <option value="Other">Other</option>
+                  <option value="Absence">Absence</option>
+                </select>
+              </td>
+              <!-- Project / Activity -->
+              <td class="col-proj col-info tl" :class="!isEditing ? 'editable' : ''" @click="!isEditing && startEdit()">
+                <div x-show="!isEditing" class="entry-proj-label">
+                  <template x-if="row.projectUrl">
+                    <span>
+                      <a :href="row.projectUrl.startsWith('http') ? row.projectUrl : 'https://' + row.projectUrl"
+                        target="_blank" rel="noopener noreferrer" class="project-link"
+                        @click.stop x-text="row.project"></a><span class="link-icon">↗</span>
+                    </span>
+                  </template>
+                  <template x-if="!row.projectUrl">
+                    <span x-text="row.project"></span>
+                  </template>
+                </div>
+                <div x-show="isEditing">
+                  <div class="entry-proj-edit-row">
+                    <input x-ref="editProject" type="text" x-model="editProject"
+                      placeholder="Project name" class="inline-edit entry-proj-input">
+                    <button type="button" @click.stop="toggleUrlRow()" title="Add/edit link (Ctrl+K)"
+                      class="btn-link-toggle"
+                      :style="{color: editUrl ? 'var(--color-primary-light)' : 'var(--color-gray-300)'}">🔗</button>
+                  </div>
+                  <div x-show="showUrlRow" class="entry-url-row">
+                    <input x-ref="editUrl" type="url" x-model="editUrl"
+                      placeholder="https://..." class="inline-edit entry-url-input"
+                      :tabindex="showUrlRow ? 0 : -1">
+                    <button type="button"
+                      @click.stop="editUrl=''; showUrlRow=false; $nextTick(()=>$refs.editProject?.focus())"
+                      title="Remove link"
+                      class="btn-url-remove">✕</button>
+                  </div>
+                </div>
+              </td>
+              <!-- Notes -->
+              <td class="col-notes col-info tl" :class="[!isEditing ? 'editable' : 'col-notes--editing']" @click="!isEditing && startEdit()">
+                <span x-show="!isEditing" class="entry-status-text" x-text="row.status || '—'"></span>
+                <textarea x-show="isEditing" x-model="editStatus" placeholder="Status/notes"
+                  rows="4" class="inline-edit entry-notes-input"></textarea>
+              </td>
+              <!-- EPSD -->
+              <td class="col-epsd col-info"
+                :class="[row.type === 'Project' && !isEditing ? 'editable' : '', row.type !== 'Project' ? 'cell-inactive' : 'text-center']"
+                @click="row.type === 'Project' && !isEditing && startEdit()">
+                <div x-show="row.type === 'Project' && !isEditing"
+                  class="epsd-display"
+                  :style="{color: row.epsd ? 'var(--color-gray-600)' : 'var(--color-gray-300)', fontWeight: row.epsd ? '600' : 'normal'}"
+                  x-text="row.epsdDisplay"></div>
+                <input x-show="row.type === 'Project' && isEditing"
+                  type="date" x-model="editEpsd" class="inline-edit entry-epsd-input">
+              </td>
+              <!-- RAG -->
+              <td class="col-rag col-info" :class="row.type !== 'Project' ? 'cell-inactive' : 'text-center'">
+                <div x-show="row.type === 'Project'"
+                  @click.stop="$store.plan.cycleRAG(row.id)"
+                  class="rag-icon"
+                  x-text="row.ragStatus === 'red' ? '🔴' : row.ragStatus === 'amber' ? '🟡' : row.ragStatus === 'green' ? '🟢' : '⚪'"></div>
+              </td>
+              <!-- Month cells -->
+              <template x-for="(cell, pos) in row.dayCells" :key="cell.key">
+                <td class="col-month" :class="!isEditing ? 'editable' : ''" @click="!isEditing && startEdit(pos)">
+                  <div x-show="!isEditing">
+                    <span x-show="cell.d === 0" class="day-zero">—</span>
+                    <div x-show="cell.d !== 0">
+                      <div class="day-val" x-text="cell.d"></div>
+                      <div class="day-pct-label" x-text="cell.pct + '%'"></div>
+                    </div>
+                  </div>
+                  <input x-show="isEditing" type="number" min="0" max="31" step="0.5"
+                    :value="editDays[cell.i] ?? 0"
+                    @input="editDays[cell.i] = parseFloat($event.target.value) || 0"
+                    class="inline-edit">
+                </td>
+              </template>
+              <!-- Actions -->
+              <td class="col-del">
+                <div x-show="!isEditing">
+                  <button @click.stop="$store.plan.copyEntry(row.id)" title="Copy row"
+                    class="row-action-btn row-action-btn--copy">📋</button>
+                  <button @click.stop="$store.plan.promptEntryAction(row.id)"
+                    :title="row.archived ? 'Restore or delete row' : 'Archive or delete row'"
+                    :class="['row-action-btn', row.archived ? 'row-action-btn--restore' : 'row-action-btn--dismiss']"
+                    x-text="row.archived ? '↩' : '×'"></button>
+                </div>
+                <div x-show="isEditing">
+                  <button @click.stop="save()" title="Save" class="btn-row-save">✅</button>
+                  <button @click.stop="cancel()" title="Cancel" class="btn-row-cancel">✖</button>
+                </div>
+              </td>
+            </tr>
+            <!-- Sub-total row -->
+            <tr x-show="row.rowType === 'sub' && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-sub">
+              <td class="col-type col-info tl sub-label">∑ entries</td>
+              <td class="col-proj col-info"></td><td class="col-notes col-info"></td><td class="col-epsd col-info"></td><td class="col-rag col-info"></td>
+              <template x-for="cell in row.subCells" :key="cell.key">
+                <td class="col-month sub-month-val"
+                  x-text="cell.tot > 0 ? cell.tot : '—'"></td>
+              </template>
+              <td></td>
+            </tr>
+            <!-- Add row button row -->
+            <tr x-show="row.rowType === 'addrow' && $store.ui.editingRowId === null && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-addrow">
+              <td class="col-type col-info addrow-sticky-cell" colspan="5">
+                <button @click="$store.plan.startInlineAdd(row.empId)"
+                  class="btn-add-entry"
+                  x-text="'+ Add row for ' + row.empName"></button>
+              </td>
+              <template x-for="mth in $store.plan.tableData.mthHeaders" :key="mth.key">
+                <td></td>
+              </template>
+              <td></td>
+            </tr>
+          </tbody>
+          </template>
+      </table>
+    </div>
+    <!-- Footer legend -->
+    <div class="table-legend">
+      Click any cell to edit inline &nbsp;·&nbsp;
+      <kbd>Enter</kbd> save &nbsp;·&nbsp;
+      <kbd>Shift+Enter</kbd> save + add row &nbsp;·&nbsp;
+      <kbd>ESC</kbd> cancel &nbsp;·&nbsp;
+      <kbd>Tab</kbd> next field
+      <span class="legend-sep">|</span>
+      <span class="legend-avail-swatch legend-avail-swatch--green"></span>
+      <span x-text="'≥ ' + $store.plan.planSettings.greenThreshold + '% free'"></span> &nbsp;·&nbsp;
+      <span class="legend-avail-swatch legend-avail-swatch--yellow"></span>
+      <span x-text="'≥ ' + $store.plan.planSettings.yellowThreshold + '% free'"></span> &nbsp;·&nbsp;
+      <span class="legend-avail-swatch legend-avail-swatch--red"></span>Overallocated
+    </div>
+  </div>
+</div><!-- /#app-table -->
+
+</div><!-- /.content-grid -->
+
+<!-- ── TOAST ───────────────────────────────────────────── -->
+<div id="toast-container" role="status" aria-live="polite"></div>
+
+<!-- ── MODAL ROOT ──────────────────────────────────────── -->
+<div id="modal-root">
+
+  <!-- Confirm Modal -->
+  <div x-data="confirmModal"
+       x-show="$store.modal.activeModal === 'confirm'"
+       x-transition.opacity
+       role="dialog" aria-modal="true" aria-labelledby="confirm-title"
+       @keydown.escape.window="cancel()"
+       class="modal-backdrop"
+       x-cloak>
+    <div class="modal modal--sm" @click.stop>
+      <div class="modal__header">
+        <h2 class="modal__title" id="confirm-title" x-text="title"></h2>
+        <button class="modal__close" @click="cancel()" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p x-text="message" class="modal__message"></p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" @click="cancel()" x-text="cancelText"></button>
+        <button class="btn" :class="isDangerous ? 'btn--danger' : 'btn--primary'"
+                @click="confirm()" x-ref="confirmBtn" x-text="confirmText"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry Action Modal (Archive / Restore / Delete) -->
+  <div x-data="entryActionModal"
+       x-show="$store.modal.activeModal === 'entryAction'"
+       x-transition.opacity
+       role="dialog" aria-modal="true" aria-labelledby="entry-action-title"
+       @keydown.escape.window="cancel()"
+       class="modal-backdrop"
+       x-cloak>
+    <div class="modal modal--sm" @click.stop>
+      <div class="modal__header">
+        <h2 class="modal__title" id="entry-action-title"
+            x-text="isArchived ? 'Archived row' : 'Remove row'"></h2>
+        <button class="modal__close" @click="cancel()" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__message" x-text="entryName"></p>
+        <div class="entry-action-options">
+          <div class="entry-action-option">
+            <strong x-text="isArchived ? 'Restore' : 'Archive'"></strong>
+            <span x-text="isArchived
+              ? 'Show the row again. Allocations remain intact. Undoable.'
+              : 'Hide the row. Allocations are preserved and still affect availability. Undoable.'">
+            </span>
+          </div>
+          <div class="entry-action-option entry-action-option--danger">
+            <strong>Delete</strong>
+            <span>Permanently removes this row and all its allocations. Cannot be undone.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" @click="cancel()">Cancel</button>
+        <button class="btn btn--ghost" x-ref="safeBtn"
+                x-text="isArchived ? 'Restore' : 'Archive'"
+                @click="isArchived ? restore() : archive()"></button>
+        <button class="btn btn--danger" @click="doDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Employee Edit / Add Modal -->
+  <div x-data="empModal"
+       x-show="$store.modal.activeModal === 'empEdit'"
+       x-transition.opacity
+       role="dialog" aria-modal="true" aria-labelledby="emp-modal-title"
+       @keydown.escape.window="close()"
+       class="modal-backdrop"
+       x-cloak>
+    <div class="modal modal--lg" @click.stop>
+      <div class="modal__header">
+        <h2 class="modal__title" id="emp-modal-title"
+            x-text="isEditing ? 'Edit Employee' : 'Add Employee'"></h2>
+        <button class="modal__close" @click="close()" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+
+        <div class="modal__field-row">
+          <div class="form-field" :class="errors.name ? 'has-error' : ''">
+            <label class="form-label" for="emp-name">Name <span aria-hidden="true">*</span></label>
+            <input id="emp-name" class="form-input" type="text" x-model="name"
+                   x-ref="empName" placeholder="Full name" autocomplete="off">
+            <span class="form-error" x-show="errors.name" x-text="errors.name"></span>
+          </div>
+          <div class="form-field" :class="errors.ism ? 'has-error' : ''">
+            <label class="form-label" for="emp-ism">Manager (ISM) <span aria-hidden="true">*</span></label>
+            <input id="emp-ism" class="form-input" type="text" x-model="ism"
+                   placeholder="Manager name" autocomplete="off">
+            <span class="form-error" x-show="errors.ism" x-text="errors.ism"></span>
+          </div>
+        </div>
+
+        <div class="modal__field-row">
+          <div class="form-field">
+            <label class="form-label" for="emp-location">Location</label>
+            <select id="emp-location" class="form-select" x-model="location">
+              <template x-for="loc in activeLocs" :key="loc.code">
+                <option :value="loc.code" x-text="loc.name || loc.code"></option>
+              </template>
+            </select>
+          </div>
+          <div class="form-field" :class="errors.availabilityPct ? 'has-error' : ''">
+            <label class="form-label" for="emp-avail">Availability %</label>
+            <input id="emp-avail" class="form-input" type="number" min="1" max="100"
+                   x-model="availabilityPct">
+            <span class="form-error" x-show="errors.availabilityPct" x-text="errors.availabilityPct"></span>
+          </div>
+        </div>
+
+        <div class="modal__section-label">Fixed Allocation (days/month)</div>
+        <div class="modal__field-grid">
+          <div class="form-field" :class="errors.adminDays ? 'has-error' : ''">
+            <label class="form-label" for="emp-admin">Admin</label>
+            <input id="emp-admin" class="form-input form-input--narrow" type="number"
+                   min="0" max="20" x-model="adminDays">
+            <span class="form-error" x-show="errors.adminDays" x-text="errors.adminDays"></span>
+          </div>
+          <div class="form-field" :class="errors.trainingDays ? 'has-error' : ''">
+            <label class="form-label" for="emp-training">Training</label>
+            <input id="emp-training" class="form-input form-input--narrow" type="number"
+                   min="0" max="10" x-model="trainingDays">
+            <span class="form-error" x-show="errors.trainingDays" x-text="errors.trainingDays"></span>
+          </div>
+          <div class="form-field" :class="errors.internalInitiatives ? 'has-error' : ''">
+            <label class="form-label" for="emp-int">Internal Initiatives</label>
+            <input id="emp-int" class="form-input form-input--narrow" type="number"
+                   min="0" max="10" x-model="internalInitiatives">
+            <span class="form-error" x-show="errors.internalInitiatives" x-text="errors.internalInitiatives"></span>
+          </div>
+          <div class="form-field" :class="errors.cipSupport ? 'has-error' : ''">
+            <label class="form-label" for="emp-cip">CIP Support</label>
+            <input id="emp-cip" class="form-input form-input--narrow" type="number"
+                   min="0" max="10" x-model="cipSupport">
+            <span class="form-error" x-show="errors.cipSupport" x-text="errors.cipSupport"></span>
+          </div>
+          <div class="form-field" :class="errors.encActivity ? 'has-error' : ''">
+            <label class="form-label" for="emp-enc">E&amp;C Activity</label>
+            <input id="emp-enc" class="form-input form-input--narrow" type="number"
+                   min="0" max="10" x-model="encActivity">
+            <span class="form-error" x-show="errors.encActivity" x-text="errors.encActivity"></span>
+          </div>
+        </div>
+
+        <div class="modal__section-label">Future Availability Change <span class="modal__hint-inline">(optional)</span></div>
+        <div class="modal__field-row">
+          <div class="form-field" :class="errors.futureAvailabilityPct ? 'has-error' : ''">
+            <label class="form-label" for="emp-fut-avail">Future Availability %</label>
+            <input id="emp-fut-avail" class="form-input" type="number" min="1" max="100"
+                   x-model="futureAvailabilityPct" placeholder="e.g. 50">
+            <span class="form-error" x-show="errors.futureAvailabilityPct" x-text="errors.futureAvailabilityPct"></span>
+          </div>
+          <div class="form-field" :class="errors.effectiveMonth ? 'has-error' : ''">
+            <label class="form-label" for="emp-eff-month">Effective From</label>
+            <div class="form-date-pair">
+              <select id="emp-eff-month" class="form-select" x-model="effectiveMonth">
+                <option value="">Month</option>
+                <template x-for="mo in monthOptions" :key="mo.value">
+                  <option :value="mo.value" x-text="mo.label"></option>
+                </template>
+              </select>
+              <select class="form-select" x-model="effectiveYear" aria-label="Effective year">
+                <option value="">Year</option>
+                <template x-for="yr in yearOptions" :key="yr">
+                  <option :value="String(yr)" x-text="yr"></option>
+                </template>
+              </select>
+            </div>
+            <span class="form-error" x-show="errors.effectiveMonth" x-text="errors.effectiveMonth"></span>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" @click="close()">Cancel</button>
+        <button class="btn btn--primary" @click="save()"
+                x-text="isEditing ? 'Save Changes' : 'Add Employee'"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Help Modal -->
+  <div x-show="$store.ui.showKeyboardHelp"
+       x-cloak
+       x-transition.opacity
+       role="dialog" aria-modal="true" aria-labelledby="kbd-help-title"
+       @keydown.escape.window="$store.ui.showKeyboardHelp = false"
+       @click.self="$store.ui.showKeyboardHelp = false"
+       class="modal-backdrop">
+    <div class="modal modal--md" @click.stop>
+      <div class="modal__header">
+        <h2 class="modal__title" id="kbd-help-title">⌨️ Keyboard Shortcuts</h2>
+        <button class="modal__close" @click="$store.ui.showKeyboardHelp = false"
+                aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div class="kbd-help__sections">
+          <div class="kbd-help__section">
+            <h3 class="kbd-help__section-title">Navigation</h3>
+            <div class="kbd-help__rows">
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>F</kbd></div>
+                <span class="kbd-row__desc">Focus filters</span>
+              </div>
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>,</kbd></div>
+                <span class="kbd-row__desc">Open settings</span>
+              </div>
+            </div>
+          </div>
+          <div class="kbd-help__section">
+            <h3 class="kbd-help__section-title">Editing</h3>
+            <div class="kbd-help__rows">
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Enter</kbd></div>
+                <span class="kbd-row__desc">Save current edit</span>
+              </div>
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Shift</kbd><span class="kbd-row__sep">+</span><kbd>Enter</kbd></div>
+                <span class="kbd-row__desc">Save and add new row</span>
+              </div>
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Esc</kbd></div>
+                <span class="kbd-row__desc">Cancel editing</span>
+              </div>
+            </div>
+          </div>
+          <div class="kbd-help__section">
+            <h3 class="kbd-help__section-title">History</h3>
+            <div class="kbd-help__rows">
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>Z</kbd></div>
+                <span class="kbd-row__desc">Undo last change</span>
+              </div>
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>Y</kbd></div>
+                <span class="kbd-row__desc">Redo</span>
+              </div>
+            </div>
+          </div>
+          <div class="kbd-help__section">
+            <h3 class="kbd-help__section-title">Help</h3>
+            <div class="kbd-help__rows">
+              <div class="kbd-row">
+                <div class="kbd-row__keys"><kbd>Shift</kbd><span class="kbd-row__sep">+</span><kbd>?</kbd></div>
+                <span class="kbd-row__desc">Show this help</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--primary" @click="$store.ui.showKeyboardHelp = false">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#modal-root -->
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

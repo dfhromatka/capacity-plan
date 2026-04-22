@@ -1,0 +1,9 @@
+Read CLAUDE.md, docs/ARCHITECTURE.md, docs/CODE_REVIEW.md, and docs/ROADMAP.md.
+
+Then:
+1. Identify the highest-priority open item(s) to work on.
+2. Before proposing anything, treat CLAUDE.md as hard constraints — not suggestions. Flag any approach that would require bending an architectural rule.
+3. For any CSS work: grep src/css/design-tokens.css and src/css/styles.css before proposing new tokens or classes.
+4. Ask questions before proceeding. Especially around: scope (what's in/out), architecture fit (does this follow the Alpine-first / token-first rules?), and unknowns that would change the approach.
+
+Start in plan mode.

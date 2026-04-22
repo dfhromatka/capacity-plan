@@ -1,0 +1,11 @@
+{
+  "routes": [
+    { "route": "/settings", "rewrite": "/settings.html" },
+    { "route": "/settings.html", "serve": "/settings.html" },
+    { "route": "/*", "serve": "/index.html", "statusCode": 200 }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/settings.html", "/*.{css,js,ico,png,svg,woff2}"]
+  }
+}

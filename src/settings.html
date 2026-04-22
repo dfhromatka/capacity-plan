@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Capacity Plan</title>
+  <link rel="stylesheet" href="./css/design-tokens.css">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="settings-page" x-data="settingsPage">
+
+  <div class="settings-header">
+    <h1>⚙️ Settings</h1>
+    <button class="back-button" @click="window.location.href='index.html'">
+      ← Back to Capacity Plan
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+    <button class="settings-tab" :class="{'active': currentTab === 'plan-settings'}"
+      @click="switchTab('plan-settings')" role="tab"
+      :aria-selected="currentTab === 'plan-settings'" title="Plan Settings (← →)">
+      Plan Settings
+    </button>
+    <button class="settings-tab" :class="{'active': currentTab === 'employees'}"
+      @click="switchTab('employees')" role="tab"
+      :aria-selected="currentTab === 'employees'" title="Employees (← →)">
+      Employees
+    </button>
+    <button class="settings-tab" :class="{'active': currentTab === 'fixed-commitments'}"
+      @click="switchTab('fixed-commitments')" role="tab"
+      :aria-selected="currentTab === 'fixed-commitments'" title="Fixed Allocation (← →)">
+      Fixed Allocation
+    </button>
+    <button class="settings-tab" :class="{'active': currentTab === 'calendar'}"
+      @click="switchTab('calendar')" role="tab"
+      :aria-selected="currentTab === 'calendar'" title="Calendar (← →)">
+      Calendar
+    </button>
+    <button class="settings-tab" :class="{'active': currentTab === 'history'}"
+      @click="switchTab('history')" role="tab"
+      :aria-selected="currentTab === 'history'" title="History (← →)">
+      History
+    </button>
+  </div>
+
+  <!-- ── TAB 0: PLAN SETTINGS ─────────────────────────────────── -->
+  <div class="settings-content" x-show="currentTab === 'plan-settings'">
+    <div>
+      <div class="settings-section-header">
+        <h2 class="settings-section-header__title">Plan Settings</h2>
+        <p class="settings-section-header__subtitle">Configure global settings for your capacity plan</p>
+      </div>
+      <div class="settings-plan-grid">
+
+        <!-- Left column -->
+        <div>
+
+          <!-- Plan Name + Description (merged) -->
+          <div class="settings-card">
+            <div class="settings-field-group">
+              <label class="form-label" for="plan-name">Plan Name</label>
+              <input id="plan-name" type="text" class="form-input"
+                :value="planSettings.planName"
+                @change="updatePlanSetting('planName', $event.target.value)"
+                placeholder="e.g., EMEA North – Capacity Plan">
+            </div>
+            <div>
+              <label class="form-label" for="plan-desc">Plan Description</label>
+              <textarea id="plan-desc" class="form-input" rows="3"
+                :value="planSettings.planDescription"
+                @change="updatePlanSetting('planDescription', $event.target.value)"
+                placeholder="Add any notes or description for this capacity plan..."
+                style="resize:vertical"></textarea>
+            </div>
+          </div>
+
+          <!-- Active Locations -->
+          <div class="settings-card">
+            <label class="form-label">Active Locations</label>
+
+            <!-- Active location tags -->
+            <div class="location-tag-row">
+              <template x-if="activeLocationObjects.length === 0">
+                <span class="settings-empty-hint">No locations selected</span>
+              </template>
+              <template x-for="loc in activeLocationObjects" :key="loc.code">
+                <span class="location-tag">
+                  <span x-text="countryFlag(loc.code)"></span>
+                  <span x-text="loc.name"></span>
+                  <button @click="removeLocation(loc.code)"
+                    class="location-tag__remove"
+                    :aria-label="'Remove ' + loc.name"
+                    title="Remove">×</button>
+                </span>
+              </template>
+            </div>
+
+            <!-- Location picker dropdown -->
+            <div class="settings-dropdown-anchor" @click.outside="locationDropdownOpen = false">
+              <button type="button"
+                class="location-dropdown-trigger"
+                @click="locationDropdownOpen = !locationDropdownOpen; if(locationDropdownOpen) $nextTick(() => $refs.locationSearchInput?.focus())"
+                :aria-expanded="locationDropdownOpen">
+                + Add Location ▼
+              </button>
+              <div x-show="locationDropdownOpen" x-cloak class="location-dropdown-panel">
+                <div class="location-dropdown-search">
+                  <input type="text" x-ref="locationSearchInput"
+                    x-model="locationSearch"
+                    placeholder="Search by name or code..."
+                    class="form-input">
+                </div>
+                <div class="location-dropdown-list">
+                  <template x-for="c in filteredCountries" :key="c.code">
+                    <div @click="toggleLocation(c.code)" class="location-dropdown-item">
+                      <input type="checkbox" :checked="isLocationActive(c.code)"
+                        class="location-dropdown-item__checkbox">
+                      <span class="location-dropdown-item__flag" x-text="countryFlag(c.code)"></span>
+                      <div class="location-dropdown-item__body">
+                        <div class="location-dropdown-item__name" x-text="c.name"></div>
+                        <div class="location-dropdown-item__code" x-text="c.code"></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Capacity Thresholds -->
+          <div class="settings-card">
+            <h3 class="settings-card__title">Capacity Color Thresholds</h3>
+            <div class="settings-threshold-inputs">
+              <div>
+                <label class="form-label" for="yellow-threshold">🟡 Yellow Threshold (%)</label>
+                <input id="yellow-threshold" type="number" min="0" max="100" step="1"
+                  class="form-input"
+                  :value="planSettings.yellowThreshold"
+                  @change="updatePlanSetting('yellowThreshold', parseFloat($event.target.value))">
+              </div>
+              <div>
+                <label class="form-label" for="green-threshold">🟢 Green Threshold (%)</label>
+                <input id="green-threshold" type="number" min="0" max="100" step="1"
+                  class="form-input"
+                  :value="planSettings.greenThreshold"
+                  @change="updatePlanSetting('greenThreshold', parseFloat($event.target.value))">
+              </div>
+            </div>
+            <div class="settings-threshold-preview-section">
+              <div class="settings-preview-label">Preview:</div>
+              <div class="threshold-preview">
+                <div class="threshold-box threshold-box--danger">
+                  <div class="threshold-box__value" x-text="'< ' + planSettings.yellowThreshold + '%'"></div>
+                  <div class="threshold-box__label">Red</div>
+                </div>
+                <div class="threshold-box threshold-box--warning">
+                  <div class="threshold-box__value" x-text="planSettings.yellowThreshold + '% – ' + (planSettings.greenThreshold - 1) + '%'"></div>
+                  <div class="threshold-box__label">Yellow</div>
+                </div>
+                <div class="threshold-box threshold-box--success">
+                  <div class="threshold-box__value" x-text="'≥ ' + planSettings.greenThreshold + '%'"></div>
+                  <div class="threshold-box__label">Green</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right column: Data & Import/Export -->
+        <div class="settings-card">
+          <h3 class="settings-card__title">Data &amp; Import/Export</h3>
+
+          <!-- Backup & Restore -->
+          <p class="settings-card__description">Export a JSON backup of all plan data, or restore from a previously exported file.</p>
+          <div class="settings-btn-stack">
+            <button type="button" class="btn btn--primary" @click="exportData()">⬇ Export JSON Backup</button>
+            <label class="btn btn--ghost" style="cursor:pointer">
+              ⬆ Import JSON Backup
+              <input type="file" accept=".json,application/json" style="display:none"
+                @change="importData($event)">
+            </label>
+            <button type="button" class="btn btn--danger" @click="clearAllData()">🗑 Clear All Data</button>
+          </div>
+
+          <hr class="settings-divider">
+
+          <!-- CSV Import / Export -->
+          <p class="settings-card__description">
+            Import from the standard capacity plan spreadsheet (single CSV file).
+            Employees are derived from the IPM column.
+            On validation errors, an error log is downloaded automatically.
+          </p>
+          <div class="settings-btn-stack">
+            <label class="btn btn--primary" style="cursor:pointer">
+              ⬆ Import Capacity Plan CSV
+              <input type="file" accept=".csv,text/csv" style="display:none"
+                @change="importCapacityPlanCsvHandler($event)">
+            </label>
+            <button type="button" class="btn btn--ghost"
+              @click="exportEmployeesCsvHandler()"
+              :disabled="$store.plan.employees.length === 0">⬇ Export Employees CSV</button>
+            <button type="button" class="btn btn--ghost"
+              @click="exportEntriesCsvHandler()"
+              :disabled="$store.plan.employees.length === 0">⬇ Export Entries CSV</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 1: EMPLOYEES ──────────────────────────────────────── -->
+  <div class="settings-content" x-show="currentTab === 'employees'">
+    <div>
+      <div class="settings-section-header--row">
+        <div>
+          <h2 class="settings-section-header__title">Employee Management</h2>
+          <p class="settings-section-header__subtitle">Manage employee details and availability planning</p>
+        </div>
+        <button @click="addEmployee()" class="btn btn--primary">+ Add Employee</button>
+      </div>
+
+      <table class="settings-table" style="table-layout:fixed;width:100%">
+        <thead>
+          <tr>
+            <th style="text-align:left;width:28%">Name (IPM)</th>
+            <th style="text-align:left;width:22%">Manager (ISM)</th>
+            <th style="text-align:left;width:20%">Location</th>
+            <th style="text-align:center;width:12%">Current %</th>
+            <th style="text-align:center;width:18%">Actions</th>
+          </tr>
+        </thead>
+        <template x-if="employees.length === 0">
+          <tbody>
+            <tr>
+              <td colspan="5" class="settings-table-empty">
+                No employees yet. Click "+ Add Employee" to get started.
+              </td>
+            </tr>
+          </tbody>
+        </template>
+        <template x-for="emp in employees" :key="emp.id">
+          <tbody>
+            <!-- Main row -->
+            <tr>
+              <td style="text-align:left">
+                <input type="text" :value="emp.name" class="fc-input" style="width:100%"
+                  @change="updateEmployeeField(emp.id, 'name', $event.target.value)"
+                  placeholder="Employee name">
+              </td>
+              <td style="text-align:left">
+                <input type="text" :value="emp.ism" class="fc-input" style="width:100%"
+                  @change="updateEmployeeField(emp.id, 'ism', $event.target.value)"
+                  placeholder="Manager ISM">
+              </td>
+              <td style="text-align:left">
+                <select class="fc-input" style="width:100%"
+                  @change="updateEmployeeField(emp.id, 'location', $event.target.value)">
+                  <template x-for="loc in activeLocationObjects" :key="loc.code">
+                    <option :value="loc.code" :selected="emp.location === loc.code"
+                      x-text="countryFlag(loc.code) + ' ' + loc.name"></option>
+                  </template>
+                </select>
+              </td>
+              <td style="text-align:center">
+                <input type="number" min="1" max="100" step="1"
+                  :value="Math.round((emp.availability || 1) * 100)"
+                  class="fc-input" style="width:80px"
+                  @change="updateEmployeeAvailability(emp.id, $event.target.value)">
+              </td>
+              <td class="settings-actions-cell">
+                <button @click="toggleAvailabilityPanel(emp.id)"
+                  class="avail-btn"
+                  :class="expandedAvailability[emp.id] ? 'avail-btn--active' : 'avail-btn--inactive'"
+                  title="Configure availability planning"
+                  x-text="availButtonLabel(emp)"></button>
+                <button @click="deleteEmployee(emp.id)"
+                  class="settings-delete-btn"
+                  title="Delete">🗑</button>
+              </td>
+            </tr>
+
+            <!-- Availability detail panel -->
+            <tr x-show="expandedAvailability[emp.id]" x-data="{
+              futureAvailPct: emp.futureAvailability != null ? Math.round(emp.futureAvailability * 100) : '',
+              effectiveMonth: emp.availabilityEffectiveDate ? emp.availabilityEffectiveDate.split('-')[1] : '',
+              effectiveYear:  emp.availabilityEffectiveDate ? emp.availabilityEffectiveDate.split('-')[0] : ''
+            }">
+              <td colspan="5" class="avail-panel-cell">
+                <div class="avail-panel">
+                  <div class="avail-panel__header">
+                    <div class="avail-panel__title">
+                      Availability Planning for: <span x-text="emp.name || 'Employee'"></span>
+                    </div>
+                    <button @click="toggleAvailabilityPanel(emp.id)"
+                      class="avail-panel__close"
+                      aria-label="Close">×</button>
+                  </div>
+                  <div class="avail-panel__body">
+                    <div class="avail-panel__current">
+                      Current: <strong x-text="Math.round((emp.availability || 1) * 100) + '%'"></strong>
+                    </div>
+                    <div class="settings-avail-grid">
+                      <div>
+                        <label class="form-label" :for="'futureAvail_' + emp.id">Future %</label>
+                        <input type="number" :id="'futureAvail_' + emp.id"
+                          min="1" max="100" step="1"
+                          x-model="futureAvailPct"
+                          class="form-input">
+                      </div>
+                      <div>
+                        <label class="form-label" :for="'effMonth_' + emp.id">Effective Month</label>
+                        <select :id="'effMonth_' + emp.id" x-model="effectiveMonth" class="form-select">
+                          <option value="">--</option>
+                          <option value="01">Jan</option><option value="02">Feb</option>
+                          <option value="03">Mar</option><option value="04">Apr</option>
+                          <option value="05">May</option><option value="06">Jun</option>
+                          <option value="07">Jul</option><option value="08">Aug</option>
+                          <option value="09">Sep</option><option value="10">Oct</option>
+                          <option value="11">Nov</option><option value="12">Dec</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="form-label" :for="'effYear_' + emp.id">Effective Year</label>
+                        <select :id="'effYear_' + emp.id" x-model="effectiveYear" class="form-select">
+                          <option value="">--</option>
+                          <option value="2025">2025</option><option value="2026">2026</option>
+                          <option value="2027">2027</option><option value="2028">2028</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="settings-avail-actions">
+                      <button @click="saveAvailabilityPlanning(emp.id, futureAvailPct, effectiveMonth, effectiveYear)"
+                        class="btn btn--primary btn--sm">Save</button>
+                      <button @click="clearAvailabilityPlanning(emp.id)"
+                        class="btn btn--ghost btn--sm">Clear</button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </template>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── TAB 2: FIXED COMMITMENTS ─────────────────────────────── -->
+  <div class="settings-content" x-show="currentTab === 'fixed-commitments'">
+    <div>
+      <div class="settings-section-header">
+        <h2 class="settings-section-header__title">Fixed Allocation</h2>
+        <p class="settings-section-header__subtitle">Configure monthly fixed allocations for each employee (days per month)</p>
+      </div>
+      <table class="settings-table" style="table-layout:fixed;width:100%">
+        <thead>
+          <tr>
+            <th style="text-align:left;width:28%">Employee</th>
+            <th style="text-align:center;width:14.4%">Admin Time</th>
+            <th style="text-align:center;width:14.4%">Training</th>
+            <th style="text-align:center;width:14.4%">Internal Initiatives</th>
+            <th style="text-align:center;width:14.4%">CIP Support</th>
+            <th style="text-align:center;width:14.4%">E&amp;C Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-if="employees.length === 0">
+            <tr>
+              <td colspan="6" class="settings-table-empty">No employees to configure</td>
+            </tr>
+          </template>
+          <template x-for="emp in employees" :key="emp.id">
+            <tr>
+              <td class="settings-emp-name-cell">
+                <span x-text="empFlag(emp)"></span> <span x-text="emp.name || '(no name)'"></span>
+              </td>
+              <td><input type="number" min="0" max="20" step="0.5" :value="emp.adminDays || 0"
+                class="fc-input" @change="updateFixedCommitment(emp.id, 'adminDays', $event.target.value)"></td>
+              <td><input type="number" min="0" max="10" step="0.5" :value="emp.trainingDays || 0"
+                class="fc-input" @change="updateFixedCommitment(emp.id, 'trainingDays', $event.target.value)"></td>
+              <td><input type="number" min="0" max="10" step="0.5" :value="emp.internalInitiatives || 0"
+                class="fc-input" @change="updateFixedCommitment(emp.id, 'internalInitiatives', $event.target.value)"></td>
+              <td><input type="number" min="0" max="10" step="0.5" :value="emp.cipSupport || 0"
+                class="fc-input" @change="updateFixedCommitment(emp.id, 'cipSupport', $event.target.value)"></td>
+              <td><input type="number" min="0" max="10" step="0.5" :value="emp.encActivity || 0"
+                class="fc-input" @change="updateFixedCommitment(emp.id, 'encActivity', $event.target.value)"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: CALENDAR ──────────────────────────────────────── -->
+  <div class="settings-content" x-show="currentTab === 'calendar'">
+    <div>
+      <div class="settings-section-header">
+        <h2 class="settings-section-header__title">Working Days &amp; Bank Holidays</h2>
+        <p class="settings-section-header__subtitle">Configure the calendar for capacity calculations</p>
+      </div>
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">Month</th>
+            <th style="text-align:center">Working Days</th>
+            <template x-for="loc in activeLocationObjects" :key="loc.code">
+              <th style="text-align:center">
+                <span x-text="countryFlag(loc.code)"></span> <span x-text="loc.name"></span>
+              </th>
+            </template>
+          </tr>
+        </thead>
+        <template x-for="year in calendarYears" :key="year">
+          <tbody>
+            <!-- Year header row -->
+            <tr class="calendar-year-header" @click="calendarExpandedYears = { ...calendarExpandedYears, [year]: !calendarExpandedYears[year] }">
+              <td :colspan="2 + activeLocationObjects.length">
+                <span x-text="calendarExpandedYears[year] ? '▼' : '▶'" class="calendar-year-chevron"></span>
+                <span x-text="year"></span>
+              </td>
+            </tr>
+            <!-- Month rows -->
+            <template x-for="{m, idx} in monthsForYear(year)" :key="m.key">
+              <tr x-show="calendarExpandedYears[year]">
+                <td class="settings-month-label" x-text="m.label"></td>
+                <td style="text-align:center">
+                  <input type="number" min="0" max="31" :value="m.workingDays"
+                    class="fc-input"
+                    @change="updateMonthWorkingDays(idx, $event.target.value)">
+                </td>
+                <template x-for="loc in activeLocationObjects" :key="loc.code">
+                  <td style="text-align:center">
+                    <input type="number" min="0" max="10"
+                      :value="getHolidays(m, loc.code)"
+                      class="fc-input"
+                      @change="updateMonthHoliday(idx, loc.code, $event.target.value)">
+                  </td>
+                </template>
+              </tr>
+            </template>
+          </tbody>
+        </template>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── TAB 4: HISTORY ──────────────────────────────────────── -->
+  <div class="settings-content" x-show="currentTab === 'history'">
+    <div>
+      <div class="settings-section-header">
+        <h2 class="settings-section-header__title">Change History</h2>
+        <p class="settings-section-header__subtitle">All data changes are listed below. Click Restore to roll back to any earlier state.</p>
+      </div>
+
+      <div class="history-toolbar">
+        <button class="btn btn--ghost btn--sm" @click="exportAuditLog()"
+          :disabled="localAuditLog.length === 0">⬇ Export JSON</button>
+        <button class="btn btn--danger btn--sm" @click="clearAuditLog()"
+          :disabled="localAuditLog.length === 0">Clear history</button>
+      </div>
+
+      <div class="history-empty" x-show="localAuditLog.length === 0">
+        No changes recorded yet.
+      </div>
+
+      <div class="history-list" x-show="localAuditLog.length > 0">
+        <template x-for="entry in localAuditLog" :key="entry.id">
+          <div class="history-entry">
+            <div class="history-entry__info">
+              <span class="history-entry__label" x-text="entry.label"></span>
+              <span class="history-entry__detail" x-text="entry.detail" x-show="entry.detail"></span>
+              <span class="history-entry__meta" x-text="formatAuditTime(entry.timestamp) + ' · ' + entry.user"></span>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL ROOT ──────────────────────────────────────────── -->
+  <div id="modal-root">
+    <!-- Confirm Modal -->
+    <div x-data="{
+      get title()       { return $store.modal.payload.title       || 'Confirm Action'; },
+      get message()     { return $store.modal.payload.message     || 'Are you sure?'; },
+      get confirmText() { return $store.modal.payload.confirmText || 'Confirm'; },
+      get cancelText()  { return $store.modal.payload.cancelText  || 'Cancel'; },
+      get isDangerous() { return $store.modal.payload.isDangerous || false; },
+      confirm() { const cb = $store.modal.payload.onConfirm; $store.modal.close(); if (typeof cb === 'function') cb(); },
+      cancel()  { const cb = $store.modal.payload.onCancel;  $store.modal.close(); if (typeof cb === 'function') cb(); }
+    }"
+       x-show="$store.modal.activeModal === 'confirm'"
+       x-transition.opacity
+       role="dialog" aria-modal="true" aria-labelledby="confirm-title-s"
+       @keydown.escape.window="cancel()"
+       class="modal-backdrop"
+       style="display:none">
+      <div class="modal modal--sm" @click.stop>
+        <div class="modal__header">
+          <h2 class="modal__title" id="confirm-title-s" x-text="title"></h2>
+          <button class="modal__close" @click="cancel()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal__body">
+          <p x-text="message" class="modal__message"></p>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--ghost" @click="cancel()" x-text="cancelText"></button>
+          <button class="btn" :class="isDangerous ? 'btn--danger' : 'btn--primary'"
+                  @click="confirm()" x-text="confirmText"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./js/settings-main.js"></script>
+</body>
+</html>

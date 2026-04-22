@@ -1,0 +1,26 @@
+﻿Type,ISM,IPM,Projects / Activities,STATUS / Comm,Dec-25,Jan-26,Feb-26,Mar-26,Apr-26,May-26,Jun-26,Jul-26,Aug-26,Sep-26,Oct-26,Nov-26,Dec-26,Jan-27
+Project (Active),manager_1_name,employee_1_name,project 1,W2.2 new pilot entities live in feb 09th / W2.4 March 5th go live,5,3,2,1,1,,,,,,,,,
+Project (Active),manager_1_name,employee_1_name,project 2,"Vietnam will go live on 1st April, then 1 month hypercare",4,4,3,2,2,,,,,,,,,
+Project (Active),manager_1_name,employee_1_name,project 3,KO on the 03/03 - probably less than 130h. First wave should be completed on May 11. Other waves would be in July / September. To be reassigned,4,4,,3,3,3,,,,,,,,
+Project (Active),manager_1_name,employee_1_name,project 4,Jan 5th go live,6,3,,,,,,,,,,,,
+Admin,manager_1_name,employee_1_name,** CIP Support,,0.5,0.5,,,,,,,,,,,,
+Admin,manager_1_name,employee_1_name,** Admin Time & Internal Initatives,6h per Week / 3 Days Month,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+Admin,manager_1_name,employee_1_name,** Training & Personal Education,2h per week / 1 Day Month ,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+Absences,manager_1_name,employee_1_name,** Bank Holiday (Prague),,#REF!,#REF!,#REF!,#REF!,2,#REF!,#REF!,1,#REF!,#REF!,#REF!,#REF!,#REF!,#REF!
+Absences,manager_1_name,employee_1_name,** Vacations,,,,,,,10,22,12,1,,10,,,
+Project (Active),manager_1_name,employee_2_name,client 1 - project abc,"UAT to be confirmed by mid week 11. Prod2Test to be done, then test entity to be configured. Then WS development (on-hold)",2,3,2,2,,,,,,,,,,
+Project (Active),manager_1_name,employee_2_name,client 2 - project xyz,Completed,0.5,,,,,,,,,,,,,
+Project (Active),manager_1_name,employee_2_name,client 3,Kick-off week of 23/03. Then the design phase will be mainly driven by the client.,0.5,,4,4,4,4,4,,,,,,,
+Project (Active),manager_1_name,employee_2_name,client 5,Completed,2,0.5,2,2,,,,,,,,,,
+Project (Active),manager_1_name,employee_2_name,client 999,Completed,0.5,,,,,,,,,,,,,
+Project (Active),manager_1_name,employee_2_name,client 123,Go-live on the 23/03,0.5,0.2,,,,,,,,,,,,
+Project (Active),manager_1_name,employee_2_name,client abc,Completed,1,0.5,,,,,,,,,,,,
+Project (Active),manager_1_name,employee_2_name,super important VIP client ,Completed,,0.3,,,,,,,,,,,,
+Project (Active),manager_1_name,employee_2_name,blah blah blah ,"Setting up the microservices in the new entity, to be finished by 21/03",,,1.5,4,4,4,,,,,,,,
+E&C,manager_1_name,employee_2_name,consulting engagement ongoing,"Daily cases, Site review 2024",5,5,5,4,4,4,4,4,4,4,4,4,4,4
+Admin,manager_1_name,employee_2_name,** CIP Support,,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5
+Admin,manager_1_name,employee_2_name,** Admin Time & Internal Initatives,6h per Week / 3 Days Month,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+Admin,manager_1_name,employee_2_name,** Training & Personal Education,2h per week / 1 Day Month ,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+Admin,manager_1_name,employee_2_name,** Bank Holiday (Prague),,#REF!,#REF!,#REF!,#REF!,2,#REF!,#REF!,1,#REF!,#REF!,#REF!,#REF!,#REF!,#REF!
+Absences,manager_1_name,employee_2_name,** Vacations,,,,,1,2,1,,,,,,,,
+,,,,,,,,,,,,,,,,,,
