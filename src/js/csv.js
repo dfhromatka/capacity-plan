@@ -13,19 +13,17 @@ function _escape(val) {
 
 function _row(cells) { return cells.map(_escape).join(','); }
 
-export function exportEmployeesCsv(employees, fixedCategories = []) {
-  const catDaysCols  = fixedCategories.map(c => `oh_${c.id}_days`);
-  const catDescCols  = fixedCategories.map(c => `oh_${c.id}_desc`);
+// OH allocation days/descs are intentionally excluded from CSV export.
+// Since #1310, category defaults are managed plan-wide via planSettings.fixedCategories
+// and applied to all employees at once — per-employee CSV round-tripping is redundant.
+export function exportEmployeesCsv(employees) {
   const header = [
     'name','ism','location','availability',
     'futureAvailability','availabilityEffectiveDate',
-    ...catDaysCols, ...catDescCols,
   ];
   const rows = employees.map(e => _row([
     e.name, e.ism, e.location, e.availability,
     e.futureAvailability ?? '', e.availabilityEffectiveDate ?? '',
-    ...fixedCategories.map(c => e.ohAllocations?.[c.id]?.days ?? 0),
-    ...fixedCategories.map(c => e.ohAllocations?.[c.id]?.desc ?? ''),
   ]));
   return [_row(header), ...rows].join('\r\n');
 }
@@ -103,6 +101,8 @@ function _num(val, def = 0) {
   return isNaN(n) ? def : n;
 }
 
+// OH allocations are seeded from planSettings.fixedCategories.defaultDays on import —
+// per-employee CSV columns were removed in #1310 (defaults are plan-wide now).
 export function parseEmployeesCsv(text, fixedCategories = []) {
   const rows = _parseCsvText(text);
   if (rows.length < 2) return { employees: [], errors: ['File is empty or has no data rows.'] };
@@ -126,13 +126,7 @@ export function parseEmployeesCsv(text, fixedCategories = []) {
     }
     seen.add(name.toLowerCase());
     const ohAllocations = Object.fromEntries(
-      fixedCategories.map(c => [
-        c.id,
-        {
-          days: _num(_get(row, cols, `oh_${c.id}_days`), c.defaultDays),
-          desc: _get(row, cols, `oh_${c.id}_desc`),
-        }
-      ])
+      fixedCategories.map(c => [c.id, { days: c.defaultDays, desc: '' }])
     );
     employees.push({
       name,

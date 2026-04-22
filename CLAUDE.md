@@ -1,5 +1,20 @@
 # Capacity Planning Tool — Claude Instructions
 
+## Git Workflow
+
+- **Never commit unless explicitly asked.** The user decides when work is done.
+- **Never create or switch branches unless explicitly asked.**
+- When asked to commit, write a meaningful present-tense message describing the change.
+- When a task is experimental or risky, suggest a feature branch proactively — but don't create it without approval.
+- When asked to commit and push, do both in sequence.
+- **At the end of every task, output the exact `git add` command** listing all files changed during that task. Example:
+  ```
+  git add src/js/store.js src/js/data.js docs/CHANGELOG.md
+  ```
+  Do not include files that were already modified before the task started (e.g. pre-existing uncommitted changes).
+
+---
+
 ## Design Philosophy
 
 Every architectural rule exists in service of one goal:

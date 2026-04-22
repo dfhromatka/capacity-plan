@@ -394,7 +394,7 @@ export function settingsPage() {
 
     exportEmployeesCsvHandler() {
       const s = Alpine.store('plan');
-      const csv = exportEmployeesCsv(s.employees, s.planSettings?.fixedCategories ?? []);
+      const csv = exportEmployeesCsv(s.employees);
       const date = new Date().toISOString().split('T')[0];
       downloadFile(`employees-${date}.csv`, csv, 'text/csv');
     },
