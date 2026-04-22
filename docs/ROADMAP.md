@@ -49,6 +49,7 @@ Archive and Restore; Delete is not undoable.
 **Dependency:** None. Can be implemented independently of #1150.
 **Note:** "Permanent for now" — restore capability deferred to #1150 (Audit Trail).
 
+### [#1320] Drag & Drop Row Reordering *(unscoped — Low Priority)*
 
 Drag & drop functionality for better organization:
 - Drag handle on each row
@@ -64,6 +65,9 @@ Drag & drop functionality for better organization:
 ### [#1130] Rolling/Dynamic Date Range ✅ *Completed 2026-04-20 (v3.4.0) — moved to COMPLETED_FEATURES.md*
 
 ### [#1160] Import/Export ✅ *Completed 2026-04-20 (v3.4.2) — moved to COMPLETED_FEATURES.md*
+
+### [#1330] Bank Holiday Auto-Fetch *(unscoped — Low Priority)*
+
 Automatic bank holiday fetching with smart working day calculation:
 - **API integration** - Fetch holidays from public APIs (e.g., Calendarific, Nager.Date)
 - **Multi-country support** - Different holiday calendars per location (France, Czech Republic, etc.)
@@ -209,10 +213,10 @@ Have a feature suggestion? Consider:
 
 ---
 
-*Last Updated: April 21, 2026*  
+*Last Updated: April 22, 2026*  
 *For completed features, see [COMPLETED_FEATURES.md](COMPLETED_FEATURES.md)*
 
-**Next Available Feature ID: #2070** *(#1290–#1990 reserved for v1.x features; #2000–#2060 reserved for v2.x Alpine migration)*
+**Next Available Feature ID: #2070** *(#1340–#1990 reserved for v1.x features; #2000–#2060 reserved for v2.x Alpine migration)*
 
 
 > **v2.2.4 — Local vendor fallbacks for CDN libraries (IM-05) ✅ COMPLETED 2026-03-26**
@@ -343,7 +347,7 @@ Feature IDs #2000–#2050 are reserved for the v2.x Alpine migration phases.
 
 ---
 
-*Last Updated: April 21, 2026*  
+*Last Updated: April 22, 2026*  
 *For completed features, see [COMPLETED_FEATURES.md](COMPLETED_FEATURES.md)*
 
-**Next Available Feature ID: #2070** *(#1290–#1990 reserved for v1.x features; #2000–#2060 reserved for v2.x Alpine migration)*
+**Next Available Feature ID: #2070** *(#1340–#1990 reserved for v1.x features; #2000–#2060 reserved for v2.x Alpine migration)*

@@ -37,9 +37,14 @@ loops in `index.html` iterate uniform item types).
 
 ---
 
-### TOKEN-01 — Design token system has duplicate aliases and dead tokens 🟡
+### TOKEN-01 — Design token system has duplicate aliases and dead tokens ✅ Fixed v3.14.3
 
 **Files:** `src/css/design-tokens.css`, `src/css/styles.css`
+
+Fixed 2026-04-22: 12 alias/dead tokens removed from `design-tokens.css`; ~87 replacement
+references updated in `styles.css`. Legacy names (`--sap-blue`, `--gray-*`, `--color-bg` bare,
+`--space-2`/`--space-3` shorthands) eliminated. All rules now reference canonical `--color-*`,
+`--spacing-*`, and `--space-*` tokens. No legacy token names remain in either file.
 
 ---
 
