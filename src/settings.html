@@ -59,21 +59,17 @@
 
           <!-- Plan Name + Description (merged) -->
           <div class="settings-card">
-            <div class="settings-field-group">
-              <label class="form-label" for="plan-name">Plan Name</label>
-              <input id="plan-name" type="text" class="form-input"
-                :value="planSettings.planName"
-                @change="updatePlanSetting('planName', $event.target.value)"
-                placeholder="e.g., EMEA North – Capacity Plan">
-            </div>
-            <div>
-              <label class="form-label" for="plan-desc">Plan Description</label>
-              <textarea id="plan-desc" class="form-input" rows="3"
-                :value="planSettings.planDescription"
-                @change="updatePlanSetting('planDescription', $event.target.value)"
-                placeholder="Add any notes or description for this capacity plan..."
-                style="resize:vertical"></textarea>
-            </div>
+            <label class="form-label" for="plan-name">Plan Name</label>
+            <input id="plan-name" type="text" class="form-input"
+              :value="planSettings.planName"
+              @change="updatePlanSetting('planName', $event.target.value)"
+              placeholder="e.g., EMEA North – Capacity Plan">
+            <label class="form-label" for="plan-desc">Plan Description</label>
+            <textarea id="plan-desc" class="form-input" rows="3"
+              :value="planSettings.planDescription"
+              @change="updatePlanSetting('planDescription', $event.target.value)"
+              placeholder="Add any notes or description for this capacity plan..."
+              style="resize:vertical"></textarea>
           </div>
 
           <!-- Active Locations -->
@@ -355,42 +351,93 @@
         <h2 class="settings-section-header__title">Fixed Allocation</h2>
         <p class="settings-section-header__subtitle">Configure monthly fixed allocations for each employee (days per month)</p>
       </div>
-      <table class="settings-table" style="table-layout:fixed;width:100%">
-        <thead>
-          <tr>
-            <th style="text-align:left;width:28%">Employee</th>
-            <th style="text-align:center;width:14.4%">Admin Time</th>
-            <th style="text-align:center;width:14.4%">Training</th>
-            <th style="text-align:center;width:14.4%">Internal Initiatives</th>
-            <th style="text-align:center;width:14.4%">CIP Support</th>
-            <th style="text-align:center;width:14.4%">E&amp;C Activity</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template x-if="employees.length === 0">
+
+      <!-- Category definitions card -->
+      <div class="settings-card">
+        <h3 class="settings-card__title">Fixed Allocation Categories</h3>
+        <p class="settings-card__description">Define the categories that appear as OH rows for every employee. Changing a default applies to all employees immediately.</p>
+        <table class="settings-table">
+          <thead>
             <tr>
-              <td colspan="6" class="settings-table-empty">No employees to configure</td>
+              <th style="text-align:left;width:55%">Category Name</th>
+              <th style="text-align:center;width:25%">Default Days/Month</th>
+              <th style="text-align:center;width:20%">Actions</th>
             </tr>
-          </template>
-          <template x-for="emp in employees" :key="emp.id">
-            <tr>
-              <td class="settings-emp-name-cell">
-                <span x-text="empFlag(emp)"></span> <span x-text="emp.name || '(no name)'"></span>
-              </td>
-              <td><input type="number" min="0" max="20" step="0.5" :value="emp.adminDays || 0"
-                class="fc-input" @change="updateFixedCommitment(emp.id, 'adminDays', $event.target.value)"></td>
-              <td><input type="number" min="0" max="10" step="0.5" :value="emp.trainingDays || 0"
-                class="fc-input" @change="updateFixedCommitment(emp.id, 'trainingDays', $event.target.value)"></td>
-              <td><input type="number" min="0" max="10" step="0.5" :value="emp.internalInitiatives || 0"
-                class="fc-input" @change="updateFixedCommitment(emp.id, 'internalInitiatives', $event.target.value)"></td>
-              <td><input type="number" min="0" max="10" step="0.5" :value="emp.cipSupport || 0"
-                class="fc-input" @change="updateFixedCommitment(emp.id, 'cipSupport', $event.target.value)"></td>
-              <td><input type="number" min="0" max="10" step="0.5" :value="emp.encActivity || 0"
-                class="fc-input" @change="updateFixedCommitment(emp.id, 'encActivity', $event.target.value)"></td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <template x-if="(planSettings.fixedCategories || []).length === 0">
+              <tr>
+                <td colspan="3" class="settings-table-empty">No categories defined. Add one below.</td>
+              </tr>
+            </template>
+            <template x-for="cat in (planSettings.fixedCategories || [])" :key="cat.id">
+              <tr>
+                <td>
+                  <input type="text" :value="cat.name" class="fc-input" style="width:100%"
+                    @change="renameFixedCategory(cat.id, $event.target.value)"
+                    placeholder="Category name">
+                </td>
+                <td style="text-align:center">
+                  <input type="number" min="0" max="20" step="0.5"
+                    :value="cat.defaultDays"
+                    class="fc-input"
+                    @change="setFixedCategoryDefault(cat.id, $event.target.value)">
+                </td>
+                <td style="text-align:center">
+                  <button @click="deleteFixedCategory(cat.id)"
+                    class="settings-delete-btn"
+                    :aria-label="'Delete ' + cat.name"
+                    title="Delete">🗑</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <button type="button" class="btn btn--ghost btn--sm" @click="addFixedCategory()">+ Add Category</button>
+      </div>
+
+      <!-- Per-employee allocation table -->
+      <div class="settings-card">
+        <h3 class="settings-card__title">Per-Employee Allocations</h3>
+        <template x-if="(planSettings.fixedCategories || []).length === 0">
+          <p class="settings-card__description">Add categories above to configure per-employee allocations.</p>
+        </template>
+        <template x-if="(planSettings.fixedCategories || []).length > 0">
+          <table class="settings-table" style="table-layout:fixed;width:100%">
+            <thead>
+              <tr>
+                <th style="text-align:left;width:28%">Employee</th>
+                <template x-for="cat in (planSettings.fixedCategories || [])" :key="cat.id">
+                  <th style="text-align:center" x-text="cat.name"></th>
+                </template>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-if="employees.length === 0">
+                <tr>
+                  <td :colspan="1 + (planSettings.fixedCategories || []).length" class="settings-table-empty">No employees to configure</td>
+                </tr>
+              </template>
+              <template x-for="emp in employees" :key="emp.id">
+                <tr>
+                  <td class="settings-emp-name-cell">
+                    <span x-text="empFlag(emp)"></span> <span x-text="emp.name || '(no name)'"></span>
+                  </td>
+                  <template x-for="cat in (planSettings.fixedCategories || [])" :key="cat.id">
+                    <td style="text-align:center">
+                      <input type="number" min="0" max="20" step="0.5"
+                        :value="emp.ohAllocations?.[cat.id]?.days ?? 0"
+                        class="fc-input"
+                        @change="updateOhAllocation(emp.id, cat.id, 'days', $event.target.value)">
+                    </td>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </template>
+      </div>
+
     </div>
   </div>
 

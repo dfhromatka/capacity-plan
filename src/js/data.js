@@ -75,6 +75,38 @@ export function getMonthKeyFromDate(dateString) {
 
 /* ── LOCATION HELPERS ───────────────────────────────────────── */
 
+/* ── #1310: one-time migration from flat OH fields → ohAllocations ── */
+const _DEFAULT_CATEGORIES = [
+  { id: 'cat-1', name: 'Admin Time',           defaultDays: 3 },
+  { id: 'cat-2', name: 'Training',             defaultDays: 1 },
+  { id: 'cat-3', name: 'Internal Initiatives', defaultDays: 0 },
+  { id: 'cat-4', name: 'CIP Support',          defaultDays: 0 },
+  { id: 'cat-5', name: 'E&C Activity',         defaultDays: 0 },
+];
+const _LEGACY_FIELD_MAP = {
+  'cat-1': ['adminDays',          'adminDesc'],
+  'cat-2': ['trainingDays',       'trainingDesc'],
+  'cat-3': ['internalInitiatives','internalInitiativesDesc'],
+  'cat-4': ['cipSupport',         'cipSupportDesc'],
+  'cat-5': ['encActivity',        'encActivityDesc'],
+};
+
+export function _migrateOhAllocations(s) {
+  if (s.planSettings?.fixedCategories) return; // already migrated
+  s.planSettings = { ...s.planSettings, fixedCategories: _DEFAULT_CATEGORIES };
+  s.employees = s.employees.map(emp => {
+    if (emp.ohAllocations) return emp; // already in new format
+    const ohAllocations = {};
+    for (const [id, [daysKey, descKey]] of Object.entries(_LEGACY_FIELD_MAP)) {
+      ohAllocations[id] = { days: emp[daysKey] ?? 0, desc: emp[descKey] ?? '' };
+    }
+    const { adminDays, adminDesc, trainingDays, trainingDesc,
+            internalInitiatives, internalInitiativesDesc,
+            cipSupport, cipSupportDesc, encActivity, encActivityDesc, ...rest } = emp;
+    return { ...rest, ohAllocations };
+  });
+}
+
 export function migrateLocationToCode(location) {
   if (location === 'Prague') return 'CZ';
   if (location === 'France') return 'FR';
@@ -169,6 +201,8 @@ export function loadFromStorage() {
           ? { ...emp, location: migrateLocationToCode(emp.location) }
           : emp
       );
+      // #1310: migrate flat OH fields → ohAllocations if needed
+      _migrateOhAllocations(s);
     }
 
     if (stored.entries) {
@@ -257,7 +291,9 @@ export function empStats(emp, mi, entriesByEmp) {
 
   const s = Alpine.store('plan');
   const bhDays = bh(emp, mi);
-  const oh = bhDays + (emp.adminDays||0) + (emp.trainingDays||0) + (emp.internalInitiatives||0) + (emp.cipSupport||0) + (emp.encActivity||0);
+  const cats = s.planSettings?.fixedCategories ?? [];
+  const ohAlloc = cats.reduce((sum, cat) => sum + ((emp.ohAllocations?.[cat.id]?.days) || 0), 0);
+  const oh = bhDays + ohAlloc;
   const empList = entriesByEmp ? (entriesByEmp.get(emp.id) ?? []) : s.entries.filter(e => e.empId === emp.id);
   const alloc = empList.reduce((sum, e) => sum + (e.days[mi]||0), 0);
   const effectiveAvailability = getEffectiveAvailability(emp, state.months[mi].key);

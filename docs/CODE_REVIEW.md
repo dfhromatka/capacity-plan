@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-22 (v3.14.3)
+> **Last updated:** 2026-04-22 (v3.15.0)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -43,25 +43,13 @@ loops in `index.html` iterate uniform item types).
 
 ---
 
-### CSS-02 — `.settings-card` uses wrapper divs for spacing instead of layout gap 🟢
+### CSS-02 — `.settings-card` uses wrapper divs for spacing instead of layout gap ✅ Fixed v3.15.0
 
 **Files:** `src/css/styles.css`, `src/settings.html`
 
-`.settings-card` is a plain block container. Field groups inside need vertical spacing via
-`.settings-field-group` wrapper divs — an extra DOM element whose only job is spacing.
-
-The right fix:
-```css
-.settings-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-```
-Then remove `.settings-field-group` and any `margin-bottom` overrides.
-
-Wider change — affects every `.settings-card` usage and needs visual verification on all tabs.
-Treat as a standalone CSS pass.
+Fixed 2026-04-22: `.settings-card` now uses `display: flex; flex-direction: column; gap: var(--space-4)`.
+`.settings-field-group` class and its only rule removed. All wrapper divs removed from `settings.html`.
+Full audit of all settings tabs confirmed — no other spacing-wrapper patterns found.
 
 ---
 
@@ -72,7 +60,7 @@ Treat as a standalone CSS pass.
 | PERF-10 | ✅ Fixed v3.14.2 | `src/index.html` | x-if rowType gate — DOM nodes ~200k → ~26k |
 | ARCH-04 | 🟡 Important | any `x-for` with multi-type templates | Watch for; no other instances found v3.14.2 |
 | TOKEN-01 | ✅ Fixed v3.14.3 | `src/css/design-tokens.css`, `styles.css` | 12 alias/dead tokens removed; ~87 replacements |
-| CSS-02 | 🟢 Enhancement | `src/css/styles.css`, `src/settings.html` | `.settings-card` → flex+gap |
+| CSS-02 | ✅ Fixed v3.15.0 | `src/css/styles.css`, `src/settings.html` | `.settings-card` → flex+gap; `.settings-field-group` removed |
 | PERF-01–09 | ✅ Fixed v3.12–13 | `src/js/` | Performance pass complete |
 | HTML-01 | ✅ Fixed 2026-04-22 | `src/settings.html`, `src/index.html` | Nested `<tbody>` pattern fixed |
 | ST-01 | ✅ Fixed v3.4.1 | `src/index.html` | 84 inline styles → CSS classes |

@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.15.0] - 2026-04-22
+
+### Added — #1310: Configurable Fixed Allocation Categories
+
+- **Data model:** OH allocation categories are no longer hardcoded. `planSettings.fixedCategories` holds plan-global category definitions (`id`, `name`, `defaultDays`). Per-employee values live in `employee.ohAllocations` keyed by category ID: `{ days, desc }`.
+- **Migration:** `_migrateOhAllocations()` in `data.js` runs once on load when `planSettings.fixedCategories` is absent. Maps legacy flat fields (`adminDays`, `trainingDays`, `internalInitiatives`, `cipSupport`, `encActivity` + desc counterparts) to the new structure. Legacy fields are stripped from employee records after migration.
+- **Settings → Fixed Allocation tab:** New "Fixed Allocation Categories" card above the per-employee table. Supports rename, default-days change (applies to all employees immediately), add, and delete (with confirm when any employee has days > 0).
+- **Per-employee table:** Columns are now driven by `planSettings.fixedCategories` dynamically — categories added/renamed/removed reflect instantly.
+- **Employee edit modal:** Fixed allocation inputs are now dynamic (`x-for` over `planSettings.fixedCategories`). "Future Availability Change (optional)" section label removed (redundant).
+- **`empStats`:** OH calculation now reads `ohAllocations` keys instead of flat fields.
+- **`buildTableData`:** OH sub-rows generated from `fixedCategories` + `ohAllocations` dynamically.
+- **`fixedAllocDesc` component:** Updated to read/write `ohAllocations[catId].desc` instead of `emp[descField]`.
+- **CSV export:** `exportEmployeesCsv` now accepts `fixedCategories` and emits `oh_<id>_days`/`oh_<id>_desc` columns.
+- **CSV import:** `parseEmployeesCsv` and `parseCapacityPlanCsv` produce `ohAllocations` instead of flat fields.
+
+### Fixed — CSS-02: `.settings-card` spacing via flex + gap
+
+- `.settings-card` now `display: flex; flex-direction: column; gap: var(--space-4)`.
+- `.settings-field-group` class and its CSS rule removed entirely.
+- All `<div class="settings-field-group">` wrapper elements removed from `settings.html`.
+- `.settings-card__description` `margin-bottom` removed (redundant with gap).
+- Full audit of all settings tabs confirmed no other spacing-wrapper patterns.
+
+---
+
 ## [3.14.3] - 2026-04-22
 
 ### Fixed — TOKEN-01: design token alias and dead token consolidation

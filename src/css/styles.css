@@ -1496,6 +1496,7 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 /* Settings data table */
 .settings-table {
   width: 100%;
+  min-width: 0;              /* allow table to shrink inside flex card */
   background: var(--color-white);
   border: var(--border-thin) solid var(--color-gray-neutral-200);
   border-radius: var(--radius-lg);
@@ -1566,11 +1567,16 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 
 /* ── Settings card ── */
 .settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   margin-bottom: var(--space-5);
   padding: var(--space-5);
   background: var(--color-white);
   border: var(--border-thin) solid var(--color-gray-neutral-200);
   border-radius: var(--radius-lg);
+  min-width: 0;              /* allow card to shrink inside its flex/grid parent */
+  overflow-x: auto;          /* wide tables scroll within the card instead of overflowing */
 }
 
 .settings-card:last-child {
@@ -1587,7 +1593,7 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 .settings-card__description {
   font-size: var(--text-lg);
   color: var(--color-gray-neutral-500);
-  margin: 0 0 var(--space-4) 0;
+  margin: 0;
 }
 
 /* ── Location tag badges ── */
@@ -1954,8 +1960,6 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 /* ── location-dropdown item body (flex:1 name+code wrapper) ── */
 .location-dropdown-item__body { flex: 1; }
 
-/* ── settings-field-group: label + input pair with bottom spacing ── */
-.settings-field-group { margin-bottom: var(--space-4); }
 
 /* ── Actions cell in employees table (centred, no-wrap) ── */
 .settings-actions-cell {

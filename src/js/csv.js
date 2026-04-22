@@ -13,18 +13,19 @@ function _escape(val) {
 
 function _row(cells) { return cells.map(_escape).join(','); }
 
-export function exportEmployeesCsv(employees) {
+export function exportEmployeesCsv(employees, fixedCategories = []) {
+  const catDaysCols  = fixedCategories.map(c => `oh_${c.id}_days`);
+  const catDescCols  = fixedCategories.map(c => `oh_${c.id}_desc`);
   const header = [
     'name','ism','location','availability',
     'futureAvailability','availabilityEffectiveDate',
-    'adminDays','trainingDays','internalInitiatives','cipSupport','encActivity',
-    'adminDesc','trainingDesc','internalInitiativesDesc','cipSupportDesc','encActivityDesc',
+    ...catDaysCols, ...catDescCols,
   ];
   const rows = employees.map(e => _row([
     e.name, e.ism, e.location, e.availability,
     e.futureAvailability ?? '', e.availabilityEffectiveDate ?? '',
-    e.adminDays, e.trainingDays, e.internalInitiatives, e.cipSupport, e.encActivity,
-    e.adminDesc, e.trainingDesc, e.internalInitiativesDesc, e.cipSupportDesc, e.encActivityDesc,
+    ...fixedCategories.map(c => e.ohAllocations?.[c.id]?.days ?? 0),
+    ...fixedCategories.map(c => e.ohAllocations?.[c.id]?.desc ?? ''),
   ]));
   return [_row(header), ...rows].join('\r\n');
 }
@@ -102,7 +103,7 @@ function _num(val, def = 0) {
   return isNaN(n) ? def : n;
 }
 
-export function parseEmployeesCsv(text) {
+export function parseEmployeesCsv(text, fixedCategories = []) {
   const rows = _parseCsvText(text);
   if (rows.length < 2) return { employees: [], errors: ['File is empty or has no data rows.'] };
 
@@ -124,6 +125,15 @@ export function parseEmployeesCsv(text) {
       continue;
     }
     seen.add(name.toLowerCase());
+    const ohAllocations = Object.fromEntries(
+      fixedCategories.map(c => [
+        c.id,
+        {
+          days: _num(_get(row, cols, `oh_${c.id}_days`), c.defaultDays),
+          desc: _get(row, cols, `oh_${c.id}_desc`),
+        }
+      ])
+    );
     employees.push({
       name,
       ism:                      _get(row, cols, 'ism'),
@@ -131,16 +141,7 @@ export function parseEmployeesCsv(text) {
       availability:             _num(_get(row, cols, 'availability'), 1.0),
       futureAvailability:       _get(row, cols, 'futureavailability') || null,
       availabilityEffectiveDate:_get(row, cols, 'availabilityeffectivedate') || null,
-      adminDays:                _num(_get(row, cols, 'admindays'), 0),
-      trainingDays:             _num(_get(row, cols, 'trainingdays'), 0),
-      internalInitiatives:      _num(_get(row, cols, 'internalinitiatives'), 0),
-      cipSupport:               _num(_get(row, cols, 'cipsupport'), 0),
-      encActivity:              _num(_get(row, cols, 'encactivity'), 0),
-      adminDesc:                _get(row, cols, 'admindesc'),
-      trainingDesc:             _get(row, cols, 'trainingdesc'),
-      internalInitiativesDesc:  _get(row, cols, 'internalinitiativesdesc'),
-      cipSupportDesc:           _get(row, cols, 'cipsupportdesc'),
-      encActivityDesc:          _get(row, cols, 'encactivitydesc'),
+      ohAllocations,
     });
   }
 
@@ -375,8 +376,7 @@ export function parseCapacityPlanCsv(text, months) {
     availability: 1.0,
     futureAvailability: null,
     availabilityEffectiveDate: null,
-    adminDays: 0, trainingDays: 0, internalInitiatives: 0, cipSupport: 0, encActivity: 0,
-    adminDesc: '', trainingDesc: '', internalInitiativesDesc: '', cipSupportDesc: '', encActivityDesc: '',
+    ohAllocations: {},
   }));
 
   const empKeyToId = Object.fromEntries([...empMap.keys()].map((k, i) => [k, `emp${i + 1}`]));

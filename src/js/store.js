@@ -5,8 +5,7 @@ import {
   empStats, getGroupedEmployees, getGroupStats,
   getEffectiveAvailability, empEntries, acls, bh, cardStyle, sortEntries,
   formatDateShort, getMonthKeyFromDate, buildEntriesByEmp
-} from './data.js';
-import { getCountryByCode, getCountryFlag } from './countries.js';
+} from './data.js';import { getCountryByCode, getCountryFlag } from './countries.js';
 import { triggerAutoSave, Storage } from './storage.js';
 import { mutate } from './history.js';
 import { showConfirmModal } from './modals.js';
@@ -114,15 +113,16 @@ function buildTableData(store) {
         empId: emp.id, descField: null, icon: flag, label: 'Bank Holidays', daysPerMonth: null,
         cells: visMonths.map(m => { const i = monthIdxMap.get(m.key); return { key: m.key, val: bh(emp, i) }; })
       });
-      [
-        { field: 'adminDays',          descField: 'adminDesc',               icon: '📋', label: 'Admin Time' },
-        { field: 'trainingDays',        descField: 'trainingDesc',            icon: '📚', label: 'Training' },
-        { field: 'internalInitiatives', descField: 'internalInitiativesDesc', icon: '💡', label: 'Internal Initiatives' },
-        { field: 'cipSupport',          descField: 'cipSupportDesc',          icon: '🔧', label: 'CIP Support' },
-        { field: 'encActivity',         descField: 'encActivityDesc',         icon: '⚖️', label: 'E&C Activity' },
-      ].forEach(({ field, descField, icon, label }) => {
-        const val = emp[field] || 0;
-        if (val > 0) rows.push({ rowType: 'oh', key: field + '-' + emp.id, groupKey: group.key, empId: emp.id, descField, icon, label, daysPerMonth: val, cells: visMonths.map(m => ({ key: m.key, val })) });
+      const cats = store.planSettings?.fixedCategories ?? [];
+      cats.forEach(cat => {
+        const alloc = emp.ohAllocations?.[cat.id];
+        const val = alloc?.days || 0;
+        if (val > 0) rows.push({
+          rowType: 'oh', key: cat.id + '-' + emp.id, groupKey: group.key,
+          empId: emp.id, descField: cat.id, icon: '📋', label: cat.name,
+          daysPerMonth: val,
+          cells: visMonths.map(m => ({ key: m.key, val }))
+        });
       });
 
       const visEntries = empEntries(emp.id, byEmp);
@@ -162,6 +162,13 @@ export function registerStores(Alpine) {
       yellowThreshold: 10,
       greenThreshold: 20,
       redThreshold: 0,
+      fixedCategories: [
+        { id: 'cat-1', name: 'Admin Time',           defaultDays: 3 },
+        { id: 'cat-2', name: 'Training',             defaultDays: 1 },
+        { id: 'cat-3', name: 'Internal Initiatives', defaultDays: 0 },
+        { id: 'cat-4', name: 'CIP Support',          defaultDays: 0 },
+        { id: 'cat-5', name: 'E&C Activity',         defaultDays: 0 },
+      ],
     },
     activeLocations: ['CZ', 'FR', 'DE'],
     employees:       [],

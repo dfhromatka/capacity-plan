@@ -160,31 +160,9 @@ Proactive alerts and reminders:
 - **Browser Notifications** - Real-time updates
 - **Daily Digest** - Summary emails
 
-### [#1310] Configurable Fixed Allocation Categories
+### ✅ [#1310] Configurable Fixed Allocation Categories — Completed v3.15.0 (2026-04-22)
 
-Allow plan administrators to define, rename, and reorder fixed allocation categories globally.
-Currently the five categories (Admin, Training, Internal Initiatives, CIP Support, E&C Activity)
-are hardcoded as five pairs of day/description fields on every employee object.
-
-**Scope:**
-- **Category definitions** stored in `planSettings` (or a new top-level store field): each entry
-  has an `id`, `name`, and optional `defaultDays`
-- **Employee values** keyed by category `id` rather than by hard-coded field names
-  (e.g. `ohAllocations: { 'cat-1': { days: 2, desc: 'Admin' }, ... }`)
-- **Settings page** — Fixed Allocations settings panel shows editable rows:
-  - Category name (text input)
-  - Default days (number input)
-  - Delete button (removes category; clears data from all employee records)
-  - Add new category button
-  - Fix current alignment issues in the Fixed Allocations panel layout
-- **Detail grid** — OH sub-rows still auto-hidden when days = 0 (existing behaviour preserved)
-- **No per-user customization** — category definitions are plan-global
-- Employee-level day and description values remain per-employee
-
-**Data migration:** On first load after upgrade, existing hardcoded field values
-(`adminDays`, `trainingDays`, etc.) must be migrated to the new keyed structure.
-
-**Dependency:** None. Can be implemented independently.
+Categories are now plan-configurable. `planSettings.fixedCategories` holds definitions; `employee.ohAllocations` holds per-employee values keyed by ID. Settings → Fixed Allocation tab has a category management card. Employee edit modal dynamically renders category inputs. Legacy flat fields migrated on first load.
 
 ### [#1230] Multiple E&C Rows Support
 Enhanced ethics & compliance tracking:

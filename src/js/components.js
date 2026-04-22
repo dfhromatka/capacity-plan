@@ -214,11 +214,7 @@ export function registerComponents(Alpine) {
     name:       '',
     ism:        '',
     location:   '',
-    adminDays:  3,
-    trainingDays: 1,
-    internalInitiatives: 0,
-    cipSupport: 0,
-    encActivity: 0,
+    ohAllocValues: {},   // keyed by catId: { 'cat-1': 3, 'cat-2': 1, ... }
     availabilityPct: 100,
     futureAvailabilityPct: '',
     effectiveMonth: '',
@@ -258,15 +254,14 @@ export function registerComponents(Alpine) {
           const emp = this.empId
             ? ps.employees.find(e => e.id === this.empId)
             : null;
+          const cats = ps.planSettings?.fixedCategories ?? [];
           if (emp) {
             this.name        = emp.name;
             this.ism         = emp.ism;
             this.location    = emp.location;
-            this.adminDays   = emp.adminDays;
-            this.trainingDays = emp.trainingDays;
-            this.internalInitiatives = emp.internalInitiatives || 0;
-            this.cipSupport  = emp.cipSupport  || 0;
-            this.encActivity = emp.encActivity || 0;
+            this.ohAllocValues = Object.fromEntries(
+              cats.map(cat => [cat.id, emp.ohAllocations?.[cat.id]?.days ?? cat.defaultDays])
+            );
             this.availabilityPct = Math.round((emp.availability || 1) * 100);
             this.futureAvailabilityPct = emp.futureAvailability != null
               ? Math.round(emp.futureAvailability * 100) : '';
@@ -282,11 +277,7 @@ export function registerComponents(Alpine) {
             this.name        = '';
             this.ism         = '';
             this.location    = ps.activeLocations[0] || 'CZ';
-            this.adminDays   = 3;
-            this.trainingDays = 1;
-            this.internalInitiatives = 0;
-            this.cipSupport  = 0;
-            this.encActivity = 0;
+            this.ohAllocValues = Object.fromEntries(cats.map(cat => [cat.id, cat.defaultDays]));
             this.availabilityPct = 100;
             this.futureAvailabilityPct = '';
             this.effectiveMonth = '';
@@ -301,16 +292,6 @@ export function registerComponents(Alpine) {
       this.errors = {};
       if (!this.name.trim()) { this.errors.name = 'Employee name is required'; return false; }
       if (!this.ism.trim())  { this.errors.ism  = 'Manager (ISM) is required'; return false; }
-      if (this.adminDays < 0 || this.adminDays > 20)
-        { this.errors.adminDays = 'Must be 0–20'; return false; }
-      if (this.trainingDays < 0 || this.trainingDays > 10)
-        { this.errors.trainingDays = 'Must be 0–10'; return false; }
-      if (this.internalInitiatives < 0 || this.internalInitiatives > 10)
-        { this.errors.internalInitiatives = 'Must be 0–10'; return false; }
-      if (this.cipSupport < 0 || this.cipSupport > 10)
-        { this.errors.cipSupport = 'Must be 0–10'; return false; }
-      if (this.encActivity < 0 || this.encActivity > 10)
-        { this.errors.encActivity = 'Must be 0–10'; return false; }
       const avail = parseFloat(this.availabilityPct);
       if (isNaN(avail) || avail < 1 || avail > 100)
         { this.errors.availabilityPct = 'Must be 1–100%'; return false; }
@@ -333,32 +314,30 @@ export function registerComponents(Alpine) {
         ? parseFloat(this.futureAvailabilityPct) / 100 : null;
       const availabilityEffectiveDate = (this.effectiveMonth && this.effectiveYear)
         ? `${this.effectiveYear}-${this.effectiveMonth}` : null;
-      const data = {
-        name: this.name.trim(), ism: this.ism.trim(), location: this.location,
-        adminDays: parseFloat(this.adminDays) || 0,
-        trainingDays: parseFloat(this.trainingDays) || 0,
-        internalInitiatives: parseFloat(this.internalInitiatives) || 0,
-        cipSupport:  parseFloat(this.cipSupport)  || 0,
-        encActivity: parseFloat(this.encActivity) || 0,
-        availability, futureAvailability, availabilityEffectiveDate
-      };
       const empId = this.empId;
+      const ohSnapshot = { ...this.ohAllocValues };
       if (empId) {
         mutate('updateEmployee', () => {
           const s = Alpine.store('plan');
-          const idx = s.employees.findIndex(e => e.id === empId);
-          if (idx !== -1) {
-            s.employees = s.employees.map((e, i) => i === idx ? { ...e, ...data } : e);
-          }
+          s.employees = s.employees.map(e => {
+            if (e.id !== empId) return e;
+            const ohAllocations = Object.fromEntries(
+              Object.entries(ohSnapshot).map(([id, days]) => [id, { days: parseFloat(days) || 0, desc: e.ohAllocations?.[id]?.desc ?? '' }])
+            );
+            return { ...e, name: this.name.trim(), ism: this.ism.trim(), location: this.location,
+                     ohAllocations, availability, futureAvailability, availabilityEffectiveDate };
+          });
         }, { empId });
       } else {
         mutate('addEmployee', () => {
           const s = Alpine.store('plan');
           const id = 'emp' + s.nextEmpId++;
+          const ohAllocations = Object.fromEntries(
+            Object.entries(ohSnapshot).map(([catId, days]) => [catId, { days: parseFloat(days) || 0, desc: '' }])
+          );
           s.employees = [...s.employees, {
-            id, ...data,
-            adminDesc: '', trainingDesc: '', internalInitiativesDesc: '',
-            cipSupportDesc: '', encActivityDesc: ''
+            id, name: this.name.trim(), ism: this.ism.trim(), location: this.location,
+            ohAllocations, availability, futureAvailability, availabilityEffectiveDate
           }];
         });
       }
@@ -496,13 +475,14 @@ export function registerComponents(Alpine) {
   }));
 
   // ── FIXED ALLOCATION DESCRIPTION ─────────────────────────
-  Alpine.data('fixedAllocDesc', (empId, descField) => ({
+  // descField is now a category ID; desc lives at emp.ohAllocations[catId].desc
+  Alpine.data('fixedAllocDesc', (empId, catId) => ({
     editing: false,
     value:   '',
 
     get display() {
       const emp = Alpine.store('plan').employees.find(e => e.id === empId);
-      return emp ? (emp[descField] || '') : '';
+      return emp ? (emp.ohAllocations?.[catId]?.desc || '') : '';
     },
 
     startEdit() {
@@ -518,9 +498,13 @@ export function registerComponents(Alpine) {
       mutate('updateFixedAllocationDesc',
         () => {
           const ps = Alpine.store('plan');
-          ps.employees = ps.employees.map(e => e.id !== empId ? e : { ...e, [descField]: this.value.trim() });
+          ps.employees = ps.employees.map(e => {
+            if (e.id !== empId) return e;
+            const existing = e.ohAllocations?.[catId] || { days: 0, desc: '' };
+            return { ...e, ohAllocations: { ...e.ohAllocations, [catId]: { ...existing, desc: this.value.trim() } } };
+          });
         },
-        { empId, descField, value: this.value.trim() },
+        { empId, catId, value: this.value.trim() },
         { type: 'employee', record: emp });
       this.editing = false;
     },

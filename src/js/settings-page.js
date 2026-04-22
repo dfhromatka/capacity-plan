@@ -179,13 +179,14 @@ export function settingsPage() {
         const s = _store();
         const id = 'emp' + s.nextEmpId++;
         const defaultLocation = s.activeLocations[0] || 'CZ';
+        const cats = s.planSettings?.fixedCategories ?? [];
+        const ohAllocations = Object.fromEntries(
+          cats.map(cat => [cat.id, { days: cat.defaultDays, desc: '' }])
+        );
         s.employees = [...s.employees, {
           id, name: '', ism: '', location: defaultLocation,
-          adminDays: 3, trainingDays: 1, internalInitiatives: 0,
-          cipSupport: 0, encActivity: 0,
+          ohAllocations,
           availability: 1.0, futureAvailability: null, availabilityEffectiveDate: null,
-          adminDesc: '', trainingDesc: '', internalInitiativesDesc: '',
-          cipSupportDesc: '', encActivityDesc: ''
         }];
       }, {});
     },
@@ -227,12 +228,86 @@ export function settingsPage() {
       return '📋';
     },
 
-    /* ── TAB 2: FIXED COMMITMENTS ─────────────────────────────── */
-    updateFixedCommitment(empId, field, value) {
-      mutate('updateFixedCommitment', () => {
+    /* ── TAB 2: FIXED ALLOCATIONS ─────────────────────────────── */
+    updateOhAllocation(empId, catId, field, rawValue) {
+      const value = field === 'days' ? (parseFloat(rawValue) || 0) : rawValue;
+      mutate('updateOhAllocation', () => {
         const s = _store();
-        s.employees = s.employees.map(e => e.id !== empId ? e : { ...e, [field]: parseFloat(value) || 0 });
-      }, { empId, field, value });
+        s.employees = s.employees.map(e => {
+          if (e.id !== empId) return e;
+          const existing = e.ohAllocations?.[catId] || { days: 0, desc: '' };
+          return { ...e, ohAllocations: { ...e.ohAllocations, [catId]: { ...existing, [field]: value } } };
+        });
+      }, { empId, catId, field, value });
+    },
+
+    addFixedCategory() {
+      mutate('addFixedCategory', () => {
+        const s = _store();
+        const id = 'cat-' + Date.now();
+        const newCat = { id, name: 'New Category', defaultDays: 0 };
+        s.planSettings = { ...s.planSettings, fixedCategories: [...(s.planSettings.fixedCategories || []), newCat] };
+        s.employees = s.employees.map(e => ({
+          ...e,
+          ohAllocations: { ...(e.ohAllocations || {}), [id]: { days: newCat.defaultDays, desc: '' } }
+        }));
+      }, {});
+    },
+
+    renameFixedCategory(catId, name) {
+      mutate('renameFixedCategory', () => {
+        const s = _store();
+        s.planSettings = {
+          ...s.planSettings,
+          fixedCategories: s.planSettings.fixedCategories.map(c => c.id !== catId ? c : { ...c, name })
+        };
+      }, { catId, name });
+    },
+
+    setFixedCategoryDefault(catId, rawDays) {
+      const defaultDays = parseFloat(rawDays) || 0;
+      mutate('setFixedCategoryDefault', () => {
+        const s = _store();
+        s.planSettings = {
+          ...s.planSettings,
+          fixedCategories: s.planSettings.fixedCategories.map(c => c.id !== catId ? c : { ...c, defaultDays })
+        };
+        s.employees = s.employees.map(e => ({
+          ...e,
+          ohAllocations: { ...(e.ohAllocations || {}), [catId]: { ...(e.ohAllocations?.[catId] || {}), days: defaultDays } }
+        }));
+      }, { catId, defaultDays });
+    },
+
+    deleteFixedCategory(catId) {
+      const s = _store();
+      const cat = s.planSettings.fixedCategories?.find(c => c.id === catId);
+      if (!cat) return;
+      const hasData = s.employees.some(e => (e.ohAllocations?.[catId]?.days || 0) > 0);
+      const doDelete = () => {
+        mutate('deleteFixedCategory', () => {
+          const ps = _store();
+          ps.planSettings = {
+            ...ps.planSettings,
+            fixedCategories: ps.planSettings.fixedCategories.filter(c => c.id !== catId)
+          };
+          ps.employees = ps.employees.map(e => {
+            if (!e.ohAllocations) return e;
+            const { [catId]: _removed, ...rest } = e.ohAllocations;
+            return { ...e, ohAllocations: rest };
+          });
+        }, { catId, name: cat.name });
+      };
+      if (hasData) {
+        showConfirmModal({
+          title: 'Delete Category',
+          message: `"${cat.name}" has non-zero days for some employees. Delete it and clear all their data for this category?`,
+          confirmText: 'Delete', cancelText: 'Cancel', isDangerous: true,
+          onConfirm: doDelete
+        });
+      } else {
+        doDelete();
+      }
     },
 
     /* ── TAB 3: CALENDAR ─────────────────────────────────────── */
@@ -319,7 +394,7 @@ export function settingsPage() {
 
     exportEmployeesCsvHandler() {
       const s = Alpine.store('plan');
-      const csv = exportEmployeesCsv(s.employees);
+      const csv = exportEmployeesCsv(s.employees, s.planSettings?.fixedCategories ?? []);
       const date = new Date().toISOString().split('T')[0];
       downloadFile(`employees-${date}.csv`, csv, 'text/csv');
     },

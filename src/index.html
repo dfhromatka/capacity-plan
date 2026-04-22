@@ -676,39 +676,17 @@
 
         <div class="modal__section-label">Fixed Allocation (days/month)</div>
         <div class="modal__field-grid">
-          <div class="form-field" :class="errors.adminDays ? 'has-error' : ''">
-            <label class="form-label" for="emp-admin">Admin</label>
-            <input id="emp-admin" class="form-input form-input--narrow" type="number"
-                   min="0" max="20" x-model="adminDays">
-            <span class="form-error" x-show="errors.adminDays" x-text="errors.adminDays"></span>
-          </div>
-          <div class="form-field" :class="errors.trainingDays ? 'has-error' : ''">
-            <label class="form-label" for="emp-training">Training</label>
-            <input id="emp-training" class="form-input form-input--narrow" type="number"
-                   min="0" max="10" x-model="trainingDays">
-            <span class="form-error" x-show="errors.trainingDays" x-text="errors.trainingDays"></span>
-          </div>
-          <div class="form-field" :class="errors.internalInitiatives ? 'has-error' : ''">
-            <label class="form-label" for="emp-int">Internal Initiatives</label>
-            <input id="emp-int" class="form-input form-input--narrow" type="number"
-                   min="0" max="10" x-model="internalInitiatives">
-            <span class="form-error" x-show="errors.internalInitiatives" x-text="errors.internalInitiatives"></span>
-          </div>
-          <div class="form-field" :class="errors.cipSupport ? 'has-error' : ''">
-            <label class="form-label" for="emp-cip">CIP Support</label>
-            <input id="emp-cip" class="form-input form-input--narrow" type="number"
-                   min="0" max="10" x-model="cipSupport">
-            <span class="form-error" x-show="errors.cipSupport" x-text="errors.cipSupport"></span>
-          </div>
-          <div class="form-field" :class="errors.encActivity ? 'has-error' : ''">
-            <label class="form-label" for="emp-enc">E&amp;C Activity</label>
-            <input id="emp-enc" class="form-input form-input--narrow" type="number"
-                   min="0" max="10" x-model="encActivity">
-            <span class="form-error" x-show="errors.encActivity" x-text="errors.encActivity"></span>
-          </div>
+          <template x-for="cat in ($store.plan.planSettings.fixedCategories || [])" :key="cat.id">
+            <div class="form-field">
+              <label class="form-label" :for="'emp-oh-' + cat.id" x-text="cat.name"></label>
+              <input :id="'emp-oh-' + cat.id" class="form-input form-input--narrow" type="number"
+                     min="0" max="20" step="0.5"
+                     :value="ohAllocValues[cat.id] ?? 0"
+                     @input="ohAllocValues = { ...ohAllocValues, [cat.id]: parseFloat($event.target.value) || 0 }">
+            </div>
+          </template>
         </div>
 
-        <div class="modal__section-label">Future Availability Change <span class="modal__hint-inline">(optional)</span></div>
         <div class="modal__field-row">
           <div class="form-field" :class="errors.futureAvailabilityPct ? 'has-error' : ''">
             <label class="form-label" for="emp-fut-avail">Future Availability %</label>
