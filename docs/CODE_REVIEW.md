@@ -17,6 +17,27 @@
 
 ## Open Issues
 
+### KB-01 — Keyboard shortcuts blocked in inline edit mode 🟡
+
+**File:** `src/js/keyboard.js`, `src/js/components.js`
+
+**Symptom:** Global keyboard shortcuts (e.g. Escape to cancel, Ctrl+Z undo) do not fire when
+the user is in inline row edit mode and focus is on a non-cell element — e.g. the project
+name input, the notes textarea, or the EPSD date picker. Shortcuts only work when a month
+cell input is focused.
+
+**Likely cause:** `keyboard.js` guards against firing shortcuts when focus is inside an
+`<input>`, `<textarea>`, or `<select>` to avoid interfering with text entry — but this
+over-suppresses shortcuts like Escape (cancel edit) and Ctrl+Z (undo) that should always
+be available regardless of which field has focus within the edit row.
+
+**Fix direction:** In the keydown guard in `keyboard.js`, allow specific shortcuts
+(at minimum: Escape, Ctrl+Z, Ctrl+Shift+Z) to pass through even when an input is focused.
+The `tableRow` component in `components.js` already has `cancel()` and `save()` methods
+that can be called directly.
+
+---
+
 ### ARCH-04 — `x-show` used for permanent row-type selection inside `x-for` loops 🟡
 
 **Watch for:** any `x-for` loop that renders multiple different templates per iteration and uses
@@ -62,6 +83,7 @@ Full audit of all settings tabs confirmed — no other spacing-wrapper patterns 
 
 | ID | Severity | File(s) | Status |
 |----|----------|---------|--------|
+| KB-01 | 🟡 Important | `src/js/keyboard.js`, `src/js/components.js` | Shortcuts suppressed in inline edit mode when non-cell input focused |
 | PERF-10 | ✅ Fixed v3.14.2 | `src/index.html` | x-if rowType gate — DOM nodes ~200k → ~26k |
 | ARCH-04 | 🟡 Important | any `x-for` with multi-type templates | Watch for; no other instances found v3.14.2 |
 | TOKEN-01 | ✅ Fixed v3.14.3 | `src/css/design-tokens.css`, `styles.css` | 12 alias/dead tokens removed; ~87 replacements |

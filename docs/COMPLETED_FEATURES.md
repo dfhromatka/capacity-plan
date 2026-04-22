@@ -4,6 +4,29 @@ This document tracks features that have been completed and delivered. Features r
 
 ---
 
+## Version 3.15.x Features
+
+### [#1310] Configurable Fixed Allocation Categories
+**Completed**: April 22, 2026 · **Version**: v3.15.0
+
+Fixed allocation categories are now plan-configurable rather than hardcoded. `planSettings.fixedCategories` holds category definitions (id, name, defaultDays). `employee.ohAllocations` holds per-employee values keyed by category id (`{days, desc}`). Settings → Fixed Allocation tab has a category management card for adding, renaming, and removing categories. The employee edit modal dynamically renders one input per category. Legacy flat fields (`ohAdmin`, `ohTraining`, etc.) are automatically migrated to the new keyed structure on first load.
+
+---
+
+## Version 3.11.x – 3.14.x Features
+
+### [#1300] Delete vs. Archive Choice Modal
+**Completed**: April 21, 2026 · **Version**: v3.10.0
+
+Replaced the archive-only 📦 button on allocation rows with a red × that opens a choice modal. On a normal row: Archive (soft-hide, allocations preserved, undoable) or Delete (permanent, not undoable). On an archived row: Restore or Delete. Modal wording makes irreversibility explicit. `promptEntryAction()` store method opens `'entryAction'` modal; `archiveEntry()` and `deleteEntry()` already existed in `store.js`.
+
+### [#1150] Audit Trail & Version History
+**Completed**: April 21, 2026 · **Version**: v3.11.0
+
+localStorage-based audit trail with History tab in Settings. Append-only audit log (capped 50 entries) stored outside the Alpine store to avoid reactive overhead. History tab shows a reverse-chronological list with label, detail, and timestamp. Point-in-time restore with confirm modal; current state becomes new undo point before restore. Export audit log as JSON; Clear history with confirm. IM-01 resolved: undo/redo stacks migrated to `Alpine.store('plan')`; reactive toolbar undo/redo buttons added.
+
+---
+
 ## Version 3.9.x Features
 
 ### [#1290] Per-Employee Expand in Summary Mode
