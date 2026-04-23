@@ -257,11 +257,12 @@ export const Storage = {
     reader.onload = (e) => {
       try {
         callback(JSON.parse(e.target.result));
-      } catch (error) {
-        console.error('Failed to import data:', error);
+      } catch {
         callback(null);
       }
     };
+    reader.onerror = () => callback(null);
+    reader.onabort = () => callback(null);
     reader.readAsText(file);
   }
 };
@@ -343,16 +344,22 @@ export function triggerAutoSave() {
   clearTimeout(_autoSaveTimeout);
   _setSaveStatus('saving');
   _autoSaveTimeout = setTimeout(() => {
-    const ok = Storage.save(_buildSavePayload());
-    _setSaveStatus(ok ? 'saved' : 'failed');
+    try {
+      const ok = Storage.save(_buildSavePayload());
+      _setSaveStatus(ok ? 'saved' : 'failed');
+    } catch {
+      _setSaveStatus('failed');
+    }
   }, 500);
 }
 
 export function saveToStorage() {
   try {
     Storage.save(_buildSavePayload());
-  } catch (error) {
-    console.error('Save failed:', error);
+    _setSaveStatus('saved');
+  } catch (err) {
+    console.error('Save failed:', err);
+    _setSaveStatus('failed');
   }
 }
 

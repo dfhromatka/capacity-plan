@@ -37,10 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
   Alpine.start();
 
   queueMicrotask(async () => {
-    await resolveCurrentUser();
-    await loadFromStorage();
-    restoreWriteQueue();
-    if (navigator.onLine && Storage.getAdapter() === 'azure') flushWriteQueue();
-    initKeyboardShortcuts();
+    try {
+      await resolveCurrentUser();
+      await loadFromStorage();
+      restoreWriteQueue();
+      if (navigator.onLine && Storage.getAdapter() === 'azure') flushWriteQueue();
+    } catch (err) {
+      console.error('App init failed:', err);
+    } finally {
+      initKeyboardShortcuts();
+    }
   });
 });

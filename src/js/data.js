@@ -4,6 +4,7 @@ import Alpine from 'alpinejs';
 import { getCountryByCode, getCountryFlag } from './countries.js';
 import { Storage } from './storage.js';
 import { initAuditLog } from './audit.js';
+import { showToast } from './toast.js';
 
 /* ── MONTH GENERATION ───────────────────────────────────────── */
 
@@ -138,7 +139,16 @@ function _v4DaysToKeyed(daysArr) {
 /* ── LOAD DATA FROM STORAGE ─────────────────────────────────── */
 
 export async function loadFromStorage() {
-  const stored = await Storage.load();
+  let stored;
+  try {
+    stored = await Storage.load();
+  } catch (err) {
+    console.error('Failed to load from storage:', err);
+    showToast('⚠️ Could not load data from server — check your connection and refresh.', 7000);
+    const ui = Alpine.store?.('ui');
+    if (ui) ui.saveStatus = 'failed';
+    return;
+  }
   const s = Alpine.store('plan');
 
   const isV4 = stored && stored.dataVersion === 4;

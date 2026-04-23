@@ -45,7 +45,7 @@ You are reviewing a near-production single-page web application. It is a capacit
 - **Vanilla CSS with design tokens** (no Tailwind, no framework)
 - **Browser `localStorage`** for persistence (about to be replaced with Azure Table Storage)
 
-The app is about to receive a backend integration rewrite targeting **Azure Static Web Apps** with Entra ID authentication and Azure Table Storage. Any issues you find will be fixed before that work begins, so please be as thorough and specific as possible — find everything.
+The app is receiving a backend integration rewrite targeting **Azure Static Web Apps** with Entra ID authentication and Azure Table Storage. Any issues you find will be fixed before deployment, so please be as thorough and specific as possible — find everything.
 
 ---
 

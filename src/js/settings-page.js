@@ -351,9 +351,9 @@ export function settingsPage() {
     },
 
     /* ── DATA IMPORT / EXPORT ─────────────────────────────────── */
-    exportData() {
+    async exportData() {
       saveToStorage();
-      const data = Storage.load();
+      const data = await Storage.load();
       if (data) Storage.exportToFile(data);
     },
 
@@ -369,9 +369,9 @@ export function settingsPage() {
           title: 'Import Data',
           message: 'This will replace all current plan data with the imported file. This cannot be undone.\n\nProceed with import?',
           confirmText: 'Import', cancelText: 'Cancel', isDangerous: true,
-          onConfirm: () => {
-            Storage._saveToLocalStorage(data);
-            loadFromStorage();
+          onConfirm: async () => {
+            Storage.save(data);
+            await loadFromStorage();
           }
         });
         event.target.value = '';
@@ -412,30 +412,36 @@ export function settingsPage() {
       event.target.value = '';
       const reader = new FileReader();
       reader.onload = (ev) => {
-        const s = Alpine.store('plan');
-        const { employees, entries, errors, skipped } = parseCapacityPlanCsv(ev.target.result, s.months);
-        if (errors.length || employees.length === 0) {
-          const allErrors = errors.length ? errors
-            : ['No importable rows found. All rows were skipped or unrecognised.'];
-          downloadFile(`import-errors-${file.name}.txt`, buildErrorLog(file.name, allErrors, skipped));
-          return;
-        }
-        showConfirmModal({
-          title: 'Import Capacity Plan',
-          message: `Replace all current data with ${employees.length} employees and ${entries.length} entries from CSV?\n\nThis cannot be undone.`,
-          confirmText: 'Import', cancelText: 'Cancel', isDangerous: true,
-          onConfirm: () => {
-            mutate('importCapacityPlanCsv', () => {
-              s.employees = employees;
-              s.entries   = entries;
-              s.nextEmpId = employees.length + 1;
-              s.nextId    = entries.length + 1;
-            }, { empCount: employees.length, entryCount: entries.length });
-            saveToStorage();
-            location.reload();
+        try {
+          const s = Alpine.store('plan');
+          const { employees, entries, errors, skipped } = parseCapacityPlanCsv(ev.target.result, s.months);
+          if (errors.length || employees.length === 0) {
+            const allErrors = errors.length ? errors
+              : ['No importable rows found. All rows were skipped or unrecognised.'];
+            downloadFile(`import-errors-${file.name}.txt`, buildErrorLog(file.name, allErrors, skipped));
+            return;
           }
-        });
+          showConfirmModal({
+            title: 'Import Capacity Plan',
+            message: `Replace all current data with ${employees.length} employees and ${entries.length} entries from CSV?\n\nThis cannot be undone.`,
+            confirmText: 'Import', cancelText: 'Cancel', isDangerous: true,
+            onConfirm: () => {
+              mutate('importCapacityPlanCsv', () => {
+                s.employees = employees;
+                s.entries   = entries;
+                s.nextEmpId = employees.length + 1;
+                s.nextId    = entries.length + 1;
+              }, { empCount: employees.length, entryCount: entries.length });
+              saveToStorage();
+              location.reload();
+            }
+          });
+        } catch (err) {
+          console.error('CSV import failed:', err);
+          alert('Could not parse the CSV file. Please check the format and try again.');
+        }
       };
+      reader.onerror = () => alert('Could not read the file.');
       reader.readAsText(file);
     },
 
