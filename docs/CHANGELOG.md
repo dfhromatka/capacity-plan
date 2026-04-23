@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.18.0] - 2026-04-23
+
+### Added — #1360: Hierarchical Filter Redesign
+
+- **Replaced** 5 individual filter dropdowns (ISM, IPM, Location, Type, All %) with a **hierarchical two-dropdown system**: select a field first, then a condition.
+- Up to **3 filter slots** (AND-combined): slot 1 always visible; slots 2 and 3 appear when the preceding slot is active via the `+` button.
+- **New filter fields:** RAG Status (Red / Amber / Green) and Project % (Over / Under allocated vs. budget tolerance). Both produce a visual **left-border indicator** (`inset 3px var(--color-primary)`) on matching project rows when active.
+- **IPM % renamed** from "All %" — condition options unchanged.
+- `activeFilters[3]` array replaces `filterISM`, `filterIPM`, `filterType`, `filterLocation`, `filterUtilization` in the store. Session state only — not persisted to localStorage.
+- **Clear filters** button resets all 3 slots and collapses to 1 visible row.
+- `customDropdown` component removed; `filterRow(slotIdx)` component added. `toolbarDropdown` (Group by) unchanged.
+
+---
+
 ## [3.17.0] - 2026-04-23
 
 ### Added — #1350: Auto-Fill Allocations from Budget + EPSD

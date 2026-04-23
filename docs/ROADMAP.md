@@ -20,6 +20,8 @@ Feature IDs use increments of 10 (e.g., #1000, #1010, #1020) to allow for future
 
 ## 🟢 Low Priority
 
+### [#1360] Hierarchical Filter Redesign ✅ Completed v3.18.0
+
 ### [#1170] ~~Framework Migration~~ — *Superseded by v2.0 Alpine.js migration (completed v3.0.0)*
 
 ### [#1180] Azure Back-End Integration & Multi-User

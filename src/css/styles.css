@@ -845,35 +845,6 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   flex-shrink: 0;
 }
 
-/* "Clear all" button — intentionally smaller than full toolbar controls */
-.filter-clear-btn {
-  font-size: var(--text-md);
-  color: var(--color-danger-error);
-  background: var(--color-danger-bg-subtle);
-  border: var(--border-thin) solid var(--color-danger-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-1) 10px;
-  cursor: pointer;
-  font-weight: var(--font-medium);
-  white-space: nowrap;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-colors);
-}
-
-.filter-clear-btn:hover {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger-light);
-}
-
-.filter-clear-btn:focus-visible {
-  outline: 2px solid var(--color-danger-error);
-  outline-offset: 2px;
-}
-
-.filter-clear-btn:active {
-  filter: brightness(0.95);
-}
-
 /* ═══════════════════════════════════════════════════════════════
    MODAL SYSTEM (v2.1.9)  — Alpine x-show / x-data driven
    ═══════════════════════════════════════════════════════════════ */
@@ -1215,18 +1186,8 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   margin-bottom: var(--space-1);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.sidebar-filters__title .filter-clear-btn {
-  font-size: var(--text-xs);
-  padding: 1px var(--space-1);
-  border-radius: var(--radius-base);
-  box-shadow: none;
-  text-transform: none;
-  letter-spacing: normal;
-  font-weight: var(--font-medium);
-  line-height: 1;
+  justify-content: flex-start;
+  gap: var(--space-2);
 }
 
 .sidebar-filters__group {
@@ -1245,6 +1206,10 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 
 .sidebar-filters__row--compact {
   align-items: center;
+}
+
+.sidebar-filters__row--compact .sidebar-filters__group {
+  flex: 0 0 auto;
 }
 
 .sidebar-filters__group--icons {
@@ -1266,13 +1231,81 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 .filter-icon:hover { opacity: 0.75; }
 .filter-icon--active { opacity: 1; }
 
-.sidebar-filters .filter-dropdown {
-  display: block;
+/* ── FILTER ROWS (hierarchical field/condition pairs) ─────── */
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  position: relative;
 }
 
-.sidebar-filters .filter-btn {
+.filter-row__field {
+  position: relative;
+  flex: 0 0 200px;
+  width: 200px;
+}
+
+.filter-row__cond {
+  position: relative;
+  flex: 0 0 300px;
+  width: 300px;
+}
+
+.filter-row__field .filter-btn,
+.filter-row__cond .filter-btn {
   width: 100%;
   justify-content: space-between;
+}
+
+.filter-row__field .filter-panel,
+.filter-row__cond .filter-panel {
+  min-width: 160px;
+}
+
+.filter-row-and {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-semibold);
+  width: 100%;
+  padding-left: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.filter-row-clear-btn {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  padding: 3px var(--space-1);
+  cursor: pointer;
+  line-height: 1.4;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast);
+}
+.filter-row-clear-btn:hover { color: var(--color-danger); }
+.filter-row-clear-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+
+/* Visual indicator for RAG / Project % filter match */
+@keyframes filter-match-flash {
+  0%   { background-color: var(--color-primary-bg); }
+  60%  { background-color: var(--color-primary-bg); }
+  100% { background-color: transparent; }
+}
+
+.row-filter-match > td {
+  animation: filter-match-flash 1.2s ease-out forwards;
+}
+
+.row-filter-match > td:first-child {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.row-filter-match > td:last-child {
+  box-shadow: inset -3px 0 0 var(--color-primary);
 }
 
 /* Styled container matching .chart-card for visual parity between the two summary sections */

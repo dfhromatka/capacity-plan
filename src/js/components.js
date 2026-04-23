@@ -23,14 +23,12 @@ export function registerComponents(Alpine) {
         { value: 'ISM',      label: 'Group: ISM'      },
         { value: 'Location', label: 'Group: Location' }
       ];
-      if (id === 'utilization') return Alpine.store('plan').utilizationOptions;
       return [];
     },
 
     get currentVal() {
       const s = Alpine.store('plan');
-      if (id === 'groupBy')     return s.groupBy;
-      if (id === 'utilization') return s.filterUtilization;
+      if (id === 'groupBy') return s.groupBy;
       return null;
     },
 
@@ -38,10 +36,7 @@ export function registerComponents(Alpine) {
       return this.opts.find(o => o.value === this.currentVal)?.label ?? '';
     },
 
-    get isFiltered() {
-      if (id === 'utilization') return Alpine.store('plan').filterUtilization !== 'All';
-      return false;
-    },
+    get isFiltered() { return false; },
 
     toggle() {
       this.isOpen = !this.isOpen;
@@ -52,8 +47,7 @@ export function registerComponents(Alpine) {
     select(val) {
       this.isOpen = false;
       const store = Alpine.store('plan');
-      if (id === 'groupBy')     store.setGroupBy(val);
-      if (id === 'utilization') store.setUtilization(val);
+      if (id === 'groupBy') store.setGroupBy(val);
     },
 
     keyNav(e, idx) {
@@ -74,77 +68,111 @@ export function registerComponents(Alpine) {
     }
   }));
 
-  // ── FILTER DROPDOWN ───────────────────────────────────────
-  Alpine.data('customDropdown', (id) => ({
-    isOpen: false,
-    search: '',
+  // ── FILTER ROW ────────────────────────────────────────────────
+  Alpine.data('filterRow', (slotIdx) => ({
+    fieldOpen:  false,
+    condOpen:   false,
+    condSearch: '',
 
-    get opts() {
-      const s = Alpine.store('plan');
-      const typeOpts = [
-        { value: 'All',     label: 'All types'    },
-        { value: 'Project', label: 'Project only' },
-        { value: 'Other',   label: 'Other only'   },
-        { value: 'Absence', label: 'Absence only' }
+    get slot()      { return Alpine.store('plan').activeFilters[slotIdx]; },
+    get field()     { return this.slot?.field     ?? null; },
+    get condition() { return this.slot?.condition ?? null; },
+    get isActive()  { return this.field !== null && this.condition !== null; },
+
+    get fieldLabel() {
+      return this.fieldOpts.find(o => o.value === this.field)?.label ?? 'Filter by…';
+    },
+    get condLabel() {
+      if (!this.field) return '';
+      return this.condOpts.find(o => o.value === this.condition)?.label ?? 'Select…';
+    },
+
+    get fieldOpts() {
+      return [
+        { value: 'ism',         label: 'ISM'        },
+        { value: 'location',    label: 'Location'   },
+        { value: 'ipm',         label: 'IPM'        },
+        { value: 'ipm_pct',     label: 'IPM %'      },
+        { value: 'project_pct', label: 'Project %'  },
+        { value: 'rag',         label: 'RAG Status' },
       ];
-      return { ism: s.ismOptions, ipm: s.ipmOptions, location: s.locationOptions, type: typeOpts }[id] || [];
     },
 
-    get currentVal() {
+    get condOpts() {
       const s = Alpine.store('plan');
-      return ({ ism: s.filterISM, ipm: s.filterIPM, location: s.filterLocation, type: s.filterType }[id]) ?? 'All';
-    },
-
-    get isFiltered() { return this.currentVal !== 'All'; },
-
-    get visibleOpts() {
-      if (!this.search) return this.opts;
-      const q = this.search.toLowerCase();
-      return this.opts.filter(o => o.label.toLowerCase().includes(q));
-    },
-
-    get label() {
-      return this.opts.find(o => o.value === this.currentVal)?.label ?? this.currentVal;
-    },
-
-    toggle() {
-      this.isOpen = !this.isOpen;
-      if (this.isOpen) {
-        this.search = '';
-        this.$nextTick(() => this.$refs.ddSearch?.focus());
+      const pct = s.planSettings.budgetTolerancePct ?? 10;
+      switch (this.field) {
+        case 'ism':         return s.ismOptions.filter(o => o.value !== 'All');
+        case 'ipm':         return s.ipmOptions.filter(o => o.value !== 'All');
+        case 'location':    return s.locationOptions.filter(o => o.value !== 'All');
+        case 'ipm_pct':     return s.utilizationConditionOpts;
+        case 'rag':         return [
+          { value: 'red',   label: 'Red'   },
+          { value: 'amber', label: 'Amber' },
+          { value: 'green', label: 'Green' },
+        ];
+        case 'project_pct': return [
+          { value: 'over',  label: `Over allocated (>${pct}%)`  },
+          { value: 'under', label: `Under allocated (>${pct}%)` },
+        ];
+        default: return [];
       }
     },
 
-    close() { this.isOpen = false; },
-
-    select(val) {
-      this.isOpen = false;
-      const store = Alpine.store('plan');
-      if      (id === 'ism')      store.setISM(val);
-      else if (id === 'ipm')      store.setIPM(val);
-      else if (id === 'location') store.setLocation(val);
-      else if (id === 'type')     store.setType(val);
+    get visibleCondOpts() {
+      if (!this.condSearch) return this.condOpts;
+      const q = this.condSearch.toLowerCase();
+      return this.condOpts.filter(o => o.label.toLowerCase().includes(q));
     },
 
-    focusFirstOpt() {
-      this.$nextTick(() => this.$el.querySelectorAll('[data-opt]')[0]?.focus());
+    get condHasSearch() { return ['ism', 'ipm'].includes(this.field); },
+
+    selectField(val) {
+      Alpine.store('plan').setFilter(slotIdx, val, null);
+      this.fieldOpen  = false;
+      this.condSearch = '';
+      this.$nextTick(() => { this.condOpen = true; });
     },
 
-    keyNav(e, idx) {
-      const opts = Array.from(this.$el.querySelectorAll('[data-opt]'));
-      if (e.key === 'ArrowDown') {
+    selectCond(val) {
+      Alpine.store('plan').setFilter(slotIdx, this.field, val);
+      this.condOpen = false;
+      // If a row already had row-filter-match the class never leaves, so the CSS
+      // animation doesn't restart. Force-restart it after Alpine re-renders.
+      this.$nextTick(() => {
+        document.querySelectorAll('.row-filter-match > td').forEach(td => {
+          td.style.animation = 'none';
+          void td.offsetWidth; // trigger reflow to reset animation state
+          td.style.animation  = '';
+        });
+      });
+    },
+
+    clearSlot() {
+      Alpine.store('plan').setFilter(slotIdx, null, null);
+      this.fieldOpen = false;
+      this.condOpen  = false;
+    },
+
+    keyNavField(e, idx) {
+      const items = Array.from(this.$el.querySelectorAll('[data-field-opt]'));
+      if (e.key === 'ArrowDown') { e.preventDefault(); items[Math.min(idx + 1, items.length - 1)]?.focus(); }
+      else if (e.key === 'ArrowUp')  { e.preventDefault(); items[Math.max(idx - 1, 0)]?.focus(); }
+      else if (e.key === 'Enter')    { e.preventDefault(); this.selectField(this.fieldOpts[idx]?.value); }
+      else if (e.key === 'Escape')   { this.fieldOpen = false; this.$el.querySelector('.filter-field-btn')?.focus(); }
+    },
+
+    keyNavCond(e, idx) {
+      const opts  = Array.from(this.$el.querySelectorAll('[data-cond-opt]'));
+      if (e.key === 'ArrowDown') { e.preventDefault(); opts[Math.min(idx + 1, opts.length - 1)]?.focus(); }
+      else if (e.key === 'ArrowUp')  {
         e.preventDefault();
-        opts[Math.min(idx + 1, opts.length - 1)]?.focus();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (idx <= 0) this.$refs.ddSearch?.focus();
+        if (idx <= 0) this.$refs.condSearch?.focus();
         else opts[idx - 1]?.focus();
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        const v = this.visibleOpts[idx];
-        if (v) this.select(v.value);
       }
-    }
+      else if (e.key === 'Enter')  { e.preventDefault(); const v = this.visibleCondOpts[idx]; if (v) this.selectCond(v.value); }
+      else if (e.key === 'Escape') { this.condOpen = false; this.$el.querySelector('.filter-cond-btn')?.focus(); }
+    },
   }));
 
   // ── CONFIRM MODAL ─────────────────────────────────────────

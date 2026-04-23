@@ -308,7 +308,6 @@ export function empStats(emp, mi, entriesByEmp) {
 export function empEntries(empId, entriesByEmp) {
   const s = Alpine.store('plan');
   let e = entriesByEmp ? (entriesByEmp.get(empId) ?? []) : s.entries.filter(x => x.empId === empId);
-  if (s.filterType !== 'All') e = e.filter(x => x.type === s.filterType);
   if (!s.showArchived) {
     const vis = s.visibleMonths;
     const mi0 = monthIdxMap.get(vis[0]?.key);

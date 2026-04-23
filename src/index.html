@@ -32,105 +32,149 @@
 <div class="sidebar-filters">
   <div class="sidebar-filters__title">
     Filters
-    <button x-show="$store.plan.hasActiveFilters" x-cloak
-      @click="$store.plan.clearFilters()" class="filter-clear-btn">✕</button>
   </div>
 
-  <div class="sidebar-filters__row">
-    <div class="sidebar-filters__group">
-      <div x-data="customDropdown('ism')" @click.outside="close()" class="filter-dropdown">
-        <button type="button" @click="toggle()" :aria-expanded="isOpen"
-          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
-          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
-        </button>
-        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
-          <div class="filter-panel-search">
-            <input type="text" x-ref="ddSearch" x-model="search" placeholder="Search…"
-              autocomplete="off" @keydown.arrow-down.prevent="focusFirstOpt()">
-          </div>
-          <div class="filter-panel-opts">
-            <template x-for="(opt, idx) in visibleOpts" :key="opt.value">
-              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
-                :aria-selected="opt.value === currentVal" class="filter-opt">
-                <span x-text="opt.label"></span>
-                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
-              </div>
-            </template>
-          </div>
+  <!-- Filter slot 1 — always visible -->
+  <div x-data="filterRow(0)" @click.outside="fieldOpen=false; condOpen=false" class="filter-row">
+    <!-- Field dropdown -->
+    <div class="filter-row__field">
+      <button type="button" @click="fieldOpen=!fieldOpen; condOpen=false" :aria-expanded="fieldOpen"
+        class="filter-btn filter-field-btn" :class="{'filter-btn--active': field !== null}">
+        <span x-text="fieldLabel"></span><span class="filter-btn-chevron">▾</span>
+      </button>
+      <div x-show="fieldOpen" x-cloak @keydown.escape.window="fieldOpen=false" class="filter-panel">
+        <div class="filter-panel-opts">
+          <template x-for="(opt, idx) in fieldOpts" :key="opt.value">
+            <div data-field-opt tabindex="-1" @click="selectField(opt.value)" @keydown="keyNavField($event, idx)"
+              :aria-selected="opt.value === field" class="filter-opt">
+              <span x-text="opt.label"></span>
+              <span x-show="opt.value === field" class="filter-opt-check">✓</span>
+            </div>
+          </template>
         </div>
       </div>
     </div>
+    <!-- Condition dropdown — shown once field is selected -->
+    <div x-show="field !== null" class="filter-row__cond">
+      <button type="button" @click="condOpen=!condOpen; fieldOpen=false" :aria-expanded="condOpen"
+        class="filter-btn filter-cond-btn" :class="{'filter-btn--active': condition !== null}">
+        <span x-text="condLabel || 'Select…'"></span><span class="filter-btn-chevron">▾</span>
+      </button>
+      <div x-show="condOpen" x-cloak @keydown.escape.window="condOpen=false" class="filter-panel">
+        <div x-show="condHasSearch" class="filter-panel-search">
+          <input type="text" x-ref="condSearch" x-model="condSearch" placeholder="Search…"
+            autocomplete="off" @keydown.arrow-down.prevent="$el.closest('.filter-panel').querySelectorAll('[data-cond-opt]')[0]?.focus()">
+        </div>
+        <div class="filter-panel-opts">
+          <template x-for="(opt, idx) in visibleCondOpts" :key="opt.value">
+            <div data-cond-opt tabindex="-1" @click="selectCond(opt.value)" @keydown="keyNavCond($event, idx)"
+              :aria-selected="opt.value === condition" class="filter-opt">
+              <span x-text="opt.label"></span>
+              <span x-show="opt.value === condition" class="filter-opt-check">✓</span>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+    <!-- Controls -->
+    <button x-show="field !== null" @click="clearSlot()" class="row-action-btn row-action-btn--dismiss" title="Remove filter" aria-label="Remove filter">✕</button>
+    <button x-show="isActive && $store.plan.filterRowsShown < 2"
+      @click="$store.plan.filterRowsShown = 2" class="row-action-btn row-action-btn--insert" title="Add filter">+</button>
+  </div>
 
-    <div class="sidebar-filters__group">
-      <div x-data="customDropdown('ipm')" @click.outside="close()" class="filter-dropdown">
-        <button type="button" @click="toggle()" :aria-expanded="isOpen"
-          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
-          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
-        </button>
-        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
-          <div class="filter-panel-search">
-            <input type="text" x-ref="ddSearch" x-model="search" placeholder="Search…"
-              autocomplete="off" @keydown.arrow-down.prevent="focusFirstOpt()">
-          </div>
-          <div class="filter-panel-opts">
-            <template x-for="(opt, idx) in visibleOpts" :key="opt.value">
-              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
-                :aria-selected="opt.value === currentVal" class="filter-opt">
-                <span x-text="opt.label"></span>
-                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
-              </div>
-            </template>
-          </div>
+  <!-- Filter slot 2 — shown when filterRowsShown >= 2 -->
+  <div x-show="$store.plan.filterRowsShown >= 2" x-cloak
+    x-data="filterRow(1)" @click.outside="fieldOpen=false; condOpen=false" class="filter-row">
+    <span class="filter-row-and">AND</span>
+    <div class="filter-row__field">
+      <button type="button" @click="fieldOpen=!fieldOpen; condOpen=false" :aria-expanded="fieldOpen"
+        class="filter-btn filter-field-btn" :class="{'filter-btn--active': field !== null}">
+        <span x-text="fieldLabel"></span><span class="filter-btn-chevron">▾</span>
+      </button>
+      <div x-show="fieldOpen" x-cloak @keydown.escape.window="fieldOpen=false" class="filter-panel">
+        <div class="filter-panel-opts">
+          <template x-for="(opt, idx) in fieldOpts" :key="opt.value">
+            <div data-field-opt tabindex="-1" @click="selectField(opt.value)" @keydown="keyNavField($event, idx)"
+              :aria-selected="opt.value === field" class="filter-opt">
+              <span x-text="opt.label"></span>
+              <span x-show="opt.value === field" class="filter-opt-check">✓</span>
+            </div>
+          </template>
         </div>
       </div>
     </div>
+    <div x-show="field !== null" class="filter-row__cond">
+      <button type="button" @click="condOpen=!condOpen; fieldOpen=false" :aria-expanded="condOpen"
+        class="filter-btn filter-cond-btn" :class="{'filter-btn--active': condition !== null}">
+        <span x-text="condLabel || 'Select…'"></span><span class="filter-btn-chevron">▾</span>
+      </button>
+      <div x-show="condOpen" x-cloak @keydown.escape.window="condOpen=false" class="filter-panel">
+        <div x-show="condHasSearch" class="filter-panel-search">
+          <input type="text" x-ref="condSearch" x-model="condSearch" placeholder="Search…"
+            autocomplete="off" @keydown.arrow-down.prevent="$el.closest('.filter-panel').querySelectorAll('[data-cond-opt]')[0]?.focus()">
+        </div>
+        <div class="filter-panel-opts">
+          <template x-for="(opt, idx) in visibleCondOpts" :key="opt.value">
+            <div data-cond-opt tabindex="-1" @click="selectCond(opt.value)" @keydown="keyNavCond($event, idx)"
+              :aria-selected="opt.value === condition" class="filter-opt">
+              <span x-text="opt.label"></span>
+              <span x-show="opt.value === condition" class="filter-opt-check">✓</span>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+    <button x-show="field !== null" @click="clearSlot()" class="row-action-btn row-action-btn--dismiss" title="Remove filter" aria-label="Remove filter">✕</button>
+    <button x-show="isActive && $store.plan.filterRowsShown < 3"
+      @click="$store.plan.filterRowsShown = 3" class="row-action-btn row-action-btn--insert" title="Add filter">+</button>
+  </div>
 
-    <div class="sidebar-filters__group">
-      <div x-data="customDropdown('location')" @click.outside="close()" class="filter-dropdown">
-        <button type="button" @click="toggle()" :aria-expanded="isOpen"
-          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
-          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
-        </button>
-        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
-          <div class="filter-panel-search">
-            <input type="text" x-ref="ddSearch" x-model="search" placeholder="Search…"
-              autocomplete="off" @keydown.arrow-down.prevent="focusFirstOpt()">
-          </div>
-          <div class="filter-panel-opts">
-            <template x-for="(opt, idx) in visibleOpts" :key="opt.value">
-              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
-                :aria-selected="opt.value === currentVal" class="filter-opt">
-                <span x-text="opt.label"></span>
-                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
-              </div>
-            </template>
-          </div>
+  <!-- Filter slot 3 — shown when filterRowsShown >= 3 -->
+  <div x-show="$store.plan.filterRowsShown >= 3" x-cloak
+    x-data="filterRow(2)" @click.outside="fieldOpen=false; condOpen=false" class="filter-row">
+    <span class="filter-row-and">AND</span>
+    <div class="filter-row__field">
+      <button type="button" @click="fieldOpen=!fieldOpen; condOpen=false" :aria-expanded="fieldOpen"
+        class="filter-btn filter-field-btn" :class="{'filter-btn--active': field !== null}">
+        <span x-text="fieldLabel"></span><span class="filter-btn-chevron">▾</span>
+      </button>
+      <div x-show="fieldOpen" x-cloak @keydown.escape.window="fieldOpen=false" class="filter-panel">
+        <div class="filter-panel-opts">
+          <template x-for="(opt, idx) in fieldOpts" :key="opt.value">
+            <div data-field-opt tabindex="-1" @click="selectField(opt.value)" @keydown="keyNavField($event, idx)"
+              :aria-selected="opt.value === field" class="filter-opt">
+              <span x-text="opt.label"></span>
+              <span x-show="opt.value === field" class="filter-opt-check">✓</span>
+            </div>
+          </template>
         </div>
       </div>
     </div>
+    <div x-show="field !== null" class="filter-row__cond">
+      <button type="button" @click="condOpen=!condOpen; fieldOpen=false" :aria-expanded="condOpen"
+        class="filter-btn filter-cond-btn" :class="{'filter-btn--active': condition !== null}">
+        <span x-text="condLabel || 'Select…'"></span><span class="filter-btn-chevron">▾</span>
+      </button>
+      <div x-show="condOpen" x-cloak @keydown.escape.window="condOpen=false" class="filter-panel">
+        <div x-show="condHasSearch" class="filter-panel-search">
+          <input type="text" x-ref="condSearch" x-model="condSearch" placeholder="Search…"
+            autocomplete="off" @keydown.arrow-down.prevent="$el.closest('.filter-panel').querySelectorAll('[data-cond-opt]')[0]?.focus()">
+        </div>
+        <div class="filter-panel-opts">
+          <template x-for="(opt, idx) in visibleCondOpts" :key="opt.value">
+            <div data-cond-opt tabindex="-1" @click="selectCond(opt.value)" @keydown="keyNavCond($event, idx)"
+              :aria-selected="opt.value === condition" class="filter-opt">
+              <span x-text="opt.label"></span>
+              <span x-show="opt.value === condition" class="filter-opt-check">✓</span>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+    <button x-show="field !== null" @click="clearSlot()" class="row-action-btn row-action-btn--dismiss" title="Remove filter" aria-label="Remove filter">✕</button>
   </div>
 
   <div class="sidebar-filters__row sidebar-filters__row--compact">
-    <div class="sidebar-filters__group">
-      <div x-data="toolbarDropdown('utilization')" @click.outside="close()" class="filter-dropdown">
-        <button type="button" @click="toggle()" :aria-expanded="isOpen"
-          class="filter-btn" :class="{'filter-btn--active': isFiltered}">
-          <span x-text="label"></span><span class="filter-btn-chevron">▾</span>
-        </button>
-        <div x-show="isOpen" x-cloak @keydown.escape.window="close()" class="filter-panel">
-          <div class="filter-panel-opts">
-            <template x-for="(opt, idx) in opts" :key="opt.value">
-              <div data-opt tabindex="-1" @click="select(opt.value)" @keydown="keyNav($event, idx)"
-                :aria-selected="opt.value === currentVal" class="filter-opt">
-                <span x-text="opt.label"></span>
-                <span x-show="opt.value === currentVal" class="filter-opt-check">✓</span>
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="sidebar-filters__group">
       <div x-data="toolbarDropdown('groupBy')" @click.outside="close()" class="filter-dropdown">
         <button type="button" @click="toggle()" :aria-expanded="isOpen" class="filter-btn">
@@ -404,7 +448,7 @@
             <template x-if="row.rowType === 'entry'">
             <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])"
               x-data="tableRow(row.id)"
-              :class="[row.type === 'Project' ? 'row-project' : row.type === 'Other' ? 'row-other' : 'row-absence', isEditing ? 'row-editing' : '', row.archived ? 'row-archived' : '']"
+              :class="[row.type === 'Project' ? 'row-project' : row.type === 'Other' ? 'row-other' : 'row-absence', isEditing ? 'row-editing' : '', row.archived ? 'row-archived' : '', row.filterMatch ? 'row-filter-match' : '']"
               @keydown="handleKeydown && handleKeydown($event)">
               <!-- Type -->
               <td class="col-type col-info tl">

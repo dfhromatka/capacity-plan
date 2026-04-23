@@ -126,6 +126,8 @@ function buildTableData(store) {
       });
 
       const visEntries = empEntries(emp.id, byEmp);
+      const ragFilter = store.activeFilters.find(f => f.field === 'rag' && f.condition);
+      const pctFilter = store.activeFilters.find(f => f.field === 'project_pct' && f.condition);
       visEntries.forEach(e => {
         const dayCells = visMonths.map(m => {
           const i = monthIdxMap.get(m.key);
@@ -133,7 +135,22 @@ function buildTableData(store) {
           const pct = state.months[i].workingDays > 0 ? Math.round(d / state.months[i].workingDays * 100) : 0;
           return { i, key: m.key, d, pct };
         });
-        rows.push({ rowType: 'entry', key: 'entry-' + e.id, groupKey: group.key, ...e, ragStatus: e.ragStatus || 'null', epsdDisplay: e.epsd ? formatDateShort(e.epsd) : '—', dayCells });
+        let filterMatch = false;
+        if (ragFilter && e.ragStatus === ragFilter.condition) filterMatch = true;
+        if (!filterMatch && pctFilter && e.type === 'Project' && e.budgetHours && e.epsd) {
+          const epsdIdx = monthIdxMap.get(getMonthKeyFromDate(e.epsd)) ?? -1;
+          if (epsdIdx !== -1) {
+            const committed = e.days.slice(0, epsdIdx + 1).reduce((s, d) => s + d, 0);
+            const budget = e.budgetHours / 8;
+            const delta = committed - budget;
+            const tol = store.planSettings.budgetTolerancePct ?? 10;
+            if (Math.abs(delta / budget) >= tol / 100) {
+              if (pctFilter.condition === 'over'  && delta > 0) filterMatch = true;
+              if (pctFilter.condition === 'under' && delta < 0) filterMatch = true;
+            }
+          }
+        }
+        rows.push({ rowType: 'entry', key: 'entry-' + e.id, groupKey: group.key, ...e, ragStatus: e.ragStatus || 'null', epsdDisplay: e.epsd ? formatDateShort(e.epsd) : '—', dayCells, filterMatch });
       });
 
       const totalEntries = byEmp.get(emp.id) ?? [];
@@ -182,10 +199,12 @@ export function registerStores(Alpine) {
     monthConfig:     {},
     nextId:          1,
     nextEmpId:       1,
-    filterISM:       'All',
-    filterIPM:       'All',
-    filterType:      'All',
-    filterLocation:  'All',
+    activeFilters: [
+      { field: null, condition: null },
+      { field: null, condition: null },
+      { field: null, condition: null },
+    ],
+    filterRowsShown: 1,
     groupBy:         'None',
     expandedOH:      {},
     expandedGroups:  {},
@@ -197,7 +216,6 @@ export function registerStores(Alpine) {
     collapseAllEntries: true,
     expandedInSummary:  {},
     showArchived:       false,
-    filterUtilization:  'All',
 
     // ── COMPUTED ───────────────────────────────────────────────
     _refreshVisibleMonths() {
@@ -208,29 +226,59 @@ export function registerStores(Alpine) {
     get canPanForward() { return this.viewStartIndex < this.months.length - MONTHS_VISIBLE; },
 
     get visibleEmployees() {
+      const byEmp = buildEntriesByEmp(this.entries);
       let emps = this.employees;
-      if (this.filterISM      !== 'All') emps = emps.filter(e => e.ism      === this.filterISM);
-      if (this.filterIPM      !== 'All') emps = emps.filter(e => e.id       === this.filterIPM);
-      if (this.filterLocation !== 'All') emps = emps.filter(e => e.location === this.filterLocation);
-      if (this.filterUtilization !== 'All') {
-        const vis = this.visibleMonths;
-        const byEmp = buildEntriesByEmp(this.entries);
-        emps = emps.filter(emp => {
-          const totalUsed = vis.reduce((sum, m) => {
-            const mi = monthIdxMap.get(m.key);
-            const st = empStats(emp, mi, byEmp);
-            return sum + st.oh + st.alloc;
-          }, 0);
-          const totalCap = vis.reduce((sum, m) => sum + (m.workingDays || 0), 0);
-          const util = totalCap > 0 ? totalUsed / totalCap : 0;
-          const overT  = 1 - (this.planSettings.yellowThreshold || 10) / 100;
-          const underT = 1 - (this.planSettings.greenThreshold  || 20) / 100;
-          if (this.filterUtilization === 'Over')     return util > overT;
-          if (this.filterUtilization === 'Balanced') return util >= underT && util <= overT;
-          if (this.filterUtilization === 'Under')    return util < underT;
-          return true;
-        });
+
+      for (const f of this.activeFilters) {
+        if (!f.field || !f.condition) continue;
+        const tol = this.planSettings.budgetTolerancePct ?? 10;
+        switch (f.field) {
+          case 'ism':      emps = emps.filter(e => e.ism      === f.condition); break;
+          case 'ipm':      emps = emps.filter(e => e.id       === f.condition); break;
+          case 'location': emps = emps.filter(e => e.location === f.condition); break;
+          case 'ipm_pct': {
+            const vis = this.visibleMonths;
+            const overT  = 1 - (this.planSettings.yellowThreshold || 10) / 100;
+            const underT = 1 - (this.planSettings.greenThreshold  || 20) / 100;
+            emps = emps.filter(emp => {
+              const totalUsed = vis.reduce((sum, m) => {
+                const mi = monthIdxMap.get(m.key);
+                const st = empStats(emp, mi, byEmp);
+                return sum + st.oh + st.alloc;
+              }, 0);
+              const totalCap = vis.reduce((s, m) => s + (m.workingDays || 0), 0);
+              const util = totalCap > 0 ? totalUsed / totalCap : 0;
+              if (f.condition === 'Over')     return util > overT;
+              if (f.condition === 'Balanced') return util >= underT && util <= overT;
+              if (f.condition === 'Under')    return util < underT;
+              return true;
+            });
+            break;
+          }
+          case 'rag':
+            emps = emps.filter(emp => {
+              const entries = byEmp.get(emp.id) ?? [];
+              return entries.some(e => e.type === 'Project' && e.ragStatus === f.condition);
+            });
+            break;
+          case 'project_pct':
+            emps = emps.filter(emp => {
+              const entries = byEmp.get(emp.id) ?? [];
+              return entries.some(e => {
+                if (e.type !== 'Project' || !e.budgetHours || !e.epsd) return false;
+                const epsdIdx = monthIdxMap.get(getMonthKeyFromDate(e.epsd)) ?? -1;
+                if (epsdIdx === -1) return false;
+                const committed = e.days.slice(0, epsdIdx + 1).reduce((s, d) => s + d, 0);
+                const budget = e.budgetHours / 8;
+                const delta = committed - budget;
+                if (Math.abs(delta / budget) < tol / 100) return false;
+                return f.condition === 'over' ? delta > 0 : delta < 0;
+              });
+            });
+            break;
+        }
       }
+
       if (this.sortColumn === 'empName') {
         const mult = this.sortDirection === 'asc' ? 1 : -1;
         emps = [...emps].sort((a, b) => a.name.localeCompare(b.name) * mult);
@@ -239,15 +287,15 @@ export function registerStores(Alpine) {
     },
 
     get ismOptions() {
+    },
+
+    get ismOptions() {
       const isms = [...new Set(this.employees.map(e => e.ism).filter(Boolean))].sort();
       return [{ value: 'All', label: 'All ISMs' }, ...isms.map(v => ({ value: v, label: v }))];
     },
 
     get ipmOptions() {
-      let emps = this.filterISM !== 'All'
-        ? this.employees.filter(e => e.ism === this.filterISM)
-        : this.employees;
-      emps = [...emps].sort((a, b) => a.name.localeCompare(b.name));
+      const emps = [...this.employees].sort((a, b) => a.name.localeCompare(b.name));
       return [{ value: 'All', label: 'All IPMs' }, ...emps.map(e => ({ value: e.id, label: e.name }))];
     },
 
@@ -262,27 +310,24 @@ export function registerStores(Alpine) {
       return [{ value: 'All', label: 'All Locations' }, ...opts];
     },
 
-    get utilizationOptions() {
+    get utilizationConditionOpts() {
       const overPct  = 100 - (this.planSettings.yellowThreshold || 10);
       const underPct = 100 - (this.planSettings.greenThreshold  || 20);
       return [
-        { value: 'All',      label: 'All %'                        },
-        { value: 'Over',     label: `>${overPct}%`                 },
-        { value: 'Balanced', label: `${underPct}–${overPct}%`      },
-        { value: 'Under',    label: `<${underPct}%`                },
+        { value: 'Over',     label: `>${overPct}%`            },
+        { value: 'Balanced', label: `${underPct}–${overPct}%` },
+        { value: 'Under',    label: `<${underPct}%`           },
       ];
     },
 
     get hasActiveFilters() {
-      return this.filterISM !== 'All' || this.filterIPM !== 'All' ||
-             this.filterType !== 'All' || this.filterLocation !== 'All' ||
-             this.filterUtilization !== 'All';
+      return this.activeFilters.some(f => f.field !== null && f.condition !== null);
     },
 
     get cardData() {
       // Touch reactive deps so Alpine re-evaluates when they change
       void this.employees; void this.entries; void this.months;
-      void this.filterISM; void this.filterIPM; void this.filterLocation;
+      void this.activeFilters;
       return buildCardData(this);
     },
 
@@ -300,7 +345,7 @@ export function registerStores(Alpine) {
 
     get chartData() {
       void this.employees; void this.entries; void this.months;
-      void this.filterISM; void this.filterIPM; void this.filterLocation;
+      void this.activeFilters;
       const vis = this.visibleEmployees;
       if (!vis.length) return [];
       const visMonths  = this.visibleMonths;
@@ -456,23 +501,25 @@ export function registerStores(Alpine) {
     },
 
     // ── FILTER SETTERS ─────────────────────────────────────────
+    setFilter(slotIdx, field, condition) {
+      this.activeFilters = this.activeFilters.map((f, i) =>
+        i === slotIdx ? { field, condition } : f
+      );
+    },
+
+    clearFilters() {
+      this.activeFilters = [
+        { field: null, condition: null },
+        { field: null, condition: null },
+        { field: null, condition: null },
+      ];
+      this.filterRowsShown = 1;
+    },
+
     toggleAvailCards() {
       this.showAvailCards = !this.showAvailCards;
       triggerAutoSave();
     },
-
-    setISM(v) {
-      this.filterISM = v;
-      if (this.filterIPM !== 'All' && v !== 'All') {
-        const emp = this.employees.find(e => e.id === this.filterIPM);
-        if (!emp || emp.ism !== v) this.filterIPM = 'All';
-      }
-    },
-
-    setIPM(v)         { this.filterIPM         = v; },
-    setType(v)        { this.filterType        = v; },
-    setLocation(v)    { this.filterLocation    = v; },
-    setUtilization(v) { this.filterUtilization = v; triggerAutoSave(); },
 
     setGroupBy(v) {
       this.groupBy = v;
@@ -486,15 +533,6 @@ export function registerStores(Alpine) {
       if (next < 0 || next > max) return;
       s.viewStartIndex = next;
       s._refreshVisibleMonths();
-      triggerAutoSave();
-    },
-
-    clearFilters() {
-      this.filterISM         = 'All';
-      this.filterIPM         = 'All';
-      this.filterType        = 'All';
-      this.filterLocation    = 'All';
-      this.filterUtilization = 'All';
       triggerAutoSave();
     },
 
