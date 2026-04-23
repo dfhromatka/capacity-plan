@@ -19,9 +19,9 @@ export function registerComponents(Alpine) {
 
     get opts() {
       if (id === 'groupBy') return [
-        { value: 'None',     label: 'Group: None'     },
-        { value: 'ISM',      label: 'Group: ISM'      },
-        { value: 'Location', label: 'Group: Location' }
+        { value: 'None',     label: 'None'     },
+        { value: 'ISM',      label: 'ISM'      },
+        { value: 'Location', label: 'Location' }
       ];
       return [];
     },
@@ -33,7 +33,11 @@ export function registerComponents(Alpine) {
     },
 
     get label() {
-      return this.opts.find(o => o.value === this.currentVal)?.label ?? '';
+      const val = this.currentVal;
+      if (id === 'groupBy') {
+        return (!val || val === 'None') ? 'Group by' : `Group by ${val}`;
+      }
+      return this.opts.find(o => o.value === val)?.label ?? '';
     },
 
     get isFiltered() { return false; },
@@ -80,7 +84,7 @@ export function registerComponents(Alpine) {
     get isActive()  { return this.field !== null && this.condition !== null; },
 
     get fieldLabel() {
-      return this.fieldOpts.find(o => o.value === this.field)?.label ?? 'Filter by…';
+      return this.fieldOpts.find(o => o.value === this.field)?.label ?? 'Filter by';
     },
     get condLabel() {
       if (!this.field) return '';

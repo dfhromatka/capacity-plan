@@ -13,14 +13,11 @@
 <div id="app-top">
 
   <div class="page-header">
-    <h1 class="page-title"
-        x-text="$store.plan.planSettings.planName || 'Capacity Plan'">Capacity Plan</h1>
-
-    <div class="page-header__actions">
-      <!-- Settings -->
-      <button @click="window.location.href='settings.html'" class="ctrl-btn ctrl-btn--cta">
-        ⚙️ Settings
-      </button>
+    <div class="page-title-group">
+      <h1 class="page-title"
+          x-text="$store.plan.planSettings.planName || 'Capacity Plan'">Capacity Plan</h1>
+      <button @click="window.location.href='settings.html'" class="settings-gear-btn"
+        aria-label="Settings" title="Settings">⚙️</button>
     </div>
   </div>
 
@@ -197,13 +194,13 @@
     <div class="sidebar-filters__group--icons">
       <span @click="$store.plan.toggleCollapseAll()"
         :title="$store.plan.collapseAllEntries ? 'Show detail rows' : 'Show summary'"
-        :class="{'filter-icon--active': $store.plan.collapseAllEntries}"
+        :class="{'filter-icon--active': $store.plan.collapseAllEntries, 'filter-icon--lg': !$store.plan.collapseAllEntries}"
         :aria-pressed="$store.plan.collapseAllEntries"
         role="button" tabindex="0"
         @keydown.enter.prevent="$store.plan.toggleCollapseAll()"
         @keydown.space.prevent="$store.plan.toggleCollapseAll()"
         class="filter-icon"
-        x-text="$store.plan.collapseAllEntries ? '⊞' : '⊟'">
+        x-text="$store.plan.collapseAllEntries ? '≡' : '∑'">
       </span>
       <span @click="$store.plan.toggleShowArchived()"
         title="Show archived rows"

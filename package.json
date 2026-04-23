@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "alpinejs": "^3.14.8",
-    "chart.js": "^4.4.0"
+    "chart.js": "^4.4.0",
+    "country-flag-emoji-polyfill": "^0.1.8"
   },
   "devDependencies": {
     "vite": "^5.4.0"

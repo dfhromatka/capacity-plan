@@ -743,18 +743,6 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   padding-right: 10px; /* slightly tighter — chevron provides visual right-side weight */
 }
 
-/* CTA variant — Settings button (filled blue) */
-.ctrl-btn--cta {
-  background: var(--color-primary);
-  color: var(--color-white);
-  border-color: var(--color-primary-hover);
-}
-
-.ctrl-btn--cta:hover {
-  background: var(--color-primary-hover);
-  color: var(--color-white);
-}
-
 /* Active (filtered) state — applied via Alpine :class binding */
 .filter-btn--active {
   border-color: var(--color-primary-light);
@@ -1109,14 +1097,20 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   }
 }
 
-/* Title row — plan name on left, Settings button on right */
+/* Title row */
 .page-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-2);
+}
+
+/* Plan name + gear grouped together; title can grow freely */
+.page-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
 /* Plan name heading */
@@ -1127,10 +1121,30 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   letter-spacing: -0.025em;          /* Tailwind tracking-tight */
 }
 
-.page-header__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+/* Borderless gear icon — sits inline with plan name */
+.settings-gear-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.45;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--duration-fast), filter var(--duration-fast);
+}
+.settings-gear-btn:hover {
+  opacity: 1;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25));
+}
+.settings-gear-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  opacity: 1;
+}
+.settings-gear-btn:active {
+  filter: none;
+  opacity: 0.7;
 }
 
 
@@ -1212,6 +1226,13 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   flex: 0 0 auto;
 }
 
+.sidebar-filters__row--compact .filter-dropdown {
+  width: 140px;
+}
+
+.sidebar-filters__row--compact .filter-dropdown .filter-btn {
+  width: 100%;
+}
 .sidebar-filters__group--icons {
   flex: 0 0 auto;
   display: flex;
@@ -1224,12 +1245,15 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   font-size: 1.1rem;
   cursor: pointer;
   opacity: 0.45;
-  transition: opacity var(--duration-fast);
+  transition: opacity var(--duration-fast), filter var(--duration-fast);
   line-height: 1;
   user-select: none;
+  border-radius: var(--radius-sm);
+  padding: 1px;
 }
-.filter-icon:hover { opacity: 0.75; }
+.filter-icon:hover { opacity: 1; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25)); }
 .filter-icon--active { opacity: 1; }
+.filter-icon--lg { font-size: 0.8rem; }
 
 /* ── FILTER ROWS (hierarchical field/condition pairs) ─────── */
 
