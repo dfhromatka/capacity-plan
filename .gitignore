@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+api/node_modules/
 
 # Build output
 dist/
@@ -8,6 +9,7 @@ dist/
 .env
 .env.local
 .env.*.local
+api/local.settings.json
 
 # OS
 .DS_Store

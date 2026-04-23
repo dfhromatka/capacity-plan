@@ -137,8 +137,8 @@ function _v4DaysToKeyed(daysArr) {
 
 /* ── LOAD DATA FROM STORAGE ─────────────────────────────────── */
 
-export function loadFromStorage() {
-  const stored = Storage.load();
+export async function loadFromStorage() {
+  const stored = await Storage.load();
   const s = Alpine.store('plan');
 
   const isV4 = stored && stored.dataVersion === 4;
@@ -221,21 +221,18 @@ export function loadFromStorage() {
     }
 
     if (stored.state) {
-      if (stored.state.nextId !== undefined)            s.nextId         = stored.state.nextId;
-      if (stored.state.nextEmpId !== undefined)         s.nextEmpId      = stored.state.nextEmpId;
-      if (stored.state.filterISM !== undefined)         s.filterISM      = stored.state.filterISM;
-      if (stored.state.filterIPM !== undefined)         s.filterIPM      = stored.state.filterIPM;
-      if (stored.state.filterType !== undefined)        s.filterType     = stored.state.filterType;
-      if (stored.state.filterLocation !== undefined)    s.filterLocation = stored.state.filterLocation;
-      if (stored.state.groupBy !== undefined)           s.groupBy        = stored.state.groupBy;
-      if (stored.state.expandedGroups !== undefined)    s.expandedGroups = stored.state.expandedGroups;
-      if (stored.state.sortColumn !== undefined)        s.sortColumn     = stored.state.sortColumn;
-      if (stored.state.sortDirection !== undefined)     s.sortDirection  = stored.state.sortDirection;
-      if (stored.state.showAvailCards !== undefined)    s.showAvailCards      = stored.state.showAvailCards;
-      if (stored.state.collapseAllEntries !== undefined) s.collapseAllEntries = stored.state.collapseAllEntries;
-      if (stored.state.expandedInSummary  !== undefined) s.expandedInSummary  = stored.state.expandedInSummary;
-      if (stored.state.showArchived       !== undefined) s.showArchived       = stored.state.showArchived;
-      if (stored.state.filterUtilization  !== undefined) s.filterUtilization  = stored.state.filterUtilization;
+      if (stored.state.nextId !== undefined)             s.nextId              = stored.state.nextId;
+      if (stored.state.nextEmpId !== undefined)          s.nextEmpId           = stored.state.nextEmpId;
+      if (stored.state.activeFilters !== undefined)      s.activeFilters       = stored.state.activeFilters;
+      if (stored.state.filterRowsShown !== undefined)    s.filterRowsShown     = stored.state.filterRowsShown;
+      if (stored.state.groupBy !== undefined)            s.groupBy             = stored.state.groupBy;
+      if (stored.state.expandedGroups !== undefined)     s.expandedGroups      = stored.state.expandedGroups;
+      if (stored.state.sortColumn !== undefined)         s.sortColumn          = stored.state.sortColumn;
+      if (stored.state.sortDirection !== undefined)      s.sortDirection       = stored.state.sortDirection;
+      if (stored.state.showAvailCards !== undefined)     s.showAvailCards      = stored.state.showAvailCards;
+      if (stored.state.collapseAllEntries !== undefined) s.collapseAllEntries  = stored.state.collapseAllEntries;
+      if (stored.state.expandedInSummary  !== undefined) s.expandedInSummary   = stored.state.expandedInSummary;
+      if (stored.state.showArchived       !== undefined) s.showArchived        = stored.state.showArchived;
     }
     if (Array.isArray(stored.auditLog)) initAuditLog(stored.auditLog);
     console.log(`Data loaded from storage (v${stored.dataVersion})`);

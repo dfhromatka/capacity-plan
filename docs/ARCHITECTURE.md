@@ -32,7 +32,7 @@ Every file has exactly one responsibility. Never add logic that belongs in anoth
 | `src/js/storage.js` | `localStorage` read/write abstraction. No Alpine, no DOM. Exposes per-row API (`saveRecord`, `deleteRecord`) as well as bulk `save`/`load`. |
 | `src/js/data.js` | Static calendar config (`state.months`) and pure helper functions (`empStats`, `empEntries`, `bh`, etc.). No mutable globals. |
 | `src/js/store.js` | `Alpine.store('plan')` — the **single source of truth** for all mutable state. Reactive getters auto-update templates. |
-| `src/js/history.js` | Undo/redo stack + the `mutate()` dispatcher. All data mutations must go through `mutate()`. |
+| `src/js/history.js` | `mutate()` dispatcher only. Runs the mutation fn, dispatches per-row save specs to `Storage`, and appends an audit entry. Undo/redo have been removed. |
 | `src/js/chart.js` | Stub module — Chart.js was removed in v3.5.0 and replaced with an Alpine CSS bar chart. Exports no-op `initChart`/`updateChart`/`resetChart` for backward-compat. |
 | `src/js/keyboard.js` | Global keyboard shortcuts **only**. Documented exception to the no-`addEventListener` rule. |
 | `src/js/components.js` | All `Alpine.data()` component registrations. |
@@ -81,9 +81,9 @@ mutate() in history.js  →  fn() writes to Alpine.store('plan')
 ### `mutate()` signature
 
 ```js
-// op:   string label — pre-wired for audit trail (see #1150)
+// op:   string label — written to the audit log (audit.js)
 // fn:   the mutation — writes to Alpine.store('plan') synchronously
-// meta: optional context { empId, field, from, to, … }
+// meta: optional context { empId, field, from, to, … } — also written to audit log
 // save: per-row save spec — null falls back to triggerAutoSave()
 mutate('updateEmployee', () => {
   const s = Alpine.store('plan');
@@ -329,14 +329,12 @@ Import order is managed by ES module dependencies — do not use manual `<script
 
 ## 8. Known Migration Targets
 
-These are the remaining items to complete the vanilla JS → Alpine.js migration. Do not regress them.
+All previously tracked migration targets are complete:
 
-| Target | Current State | Desired End State |
-|--------|--------------|-------------------|
-| `src/js/history.js` undo/redo stacks | Plain `let` globals (`undoStack`, `redoStack`) | Properties of `Alpine.store('plan')` — deferred to #1150 audit log redesign |
-| `src/css/styles.css` `:root` block | Legacy token names (`--sap-blue`, `--gray-*`, etc.) | Block removed; all rules use `design-tokens.css` canonical tokens |
-
-The `src/js/data.js` globals migration (ARCH-02) is **complete** as of v3.3.0 — `Alpine.store('plan')` is now the single source of truth.
+| Target | Resolution |
+|--------|------------|
+| `src/js/history.js` undo/redo stacks | Removed — `history.js` is now only a mutation dispatcher |
+| `src/css/styles.css` legacy `:root` token names | Resolved — TOKEN-01 fixed v3.14.3; no legacy names remain |
 
 ---
 

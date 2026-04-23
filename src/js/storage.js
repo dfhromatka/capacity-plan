@@ -23,9 +23,10 @@ export const Storage = {
     if (this.adapter === 'sharepoint')   return this._saveToSharePoint(data);
   },
 
-  load() {
+  async load() {
     if (this.adapter === 'localStorage') return this._loadFromLocalStorage();
     if (this.adapter === 'sharepoint')   return this._loadFromSharePoint();
+    if (this.adapter === 'azure')        return this._loadFromAzure();
     return null;
   },
 
@@ -54,6 +55,10 @@ export const Storage = {
       triggerAutoSave();
     } else if (this.adapter === 'sharepoint') {
       return this._saveRecordToSharePoint(type, record);
+    } else if (this.adapter === 'azure') {
+      this._saveRecordToAzure(type, record).catch(err =>
+        showToast(`⚠️ Save failed — ${err.message}`, 5000)
+      );
     }
   },
 
@@ -62,6 +67,10 @@ export const Storage = {
       triggerAutoSave();
     } else if (this.adapter === 'sharepoint') {
       return this._deleteRecordFromSharePoint(type, id);
+    } else if (this.adapter === 'azure') {
+      this._deleteRecordFromAzure(type, id).catch(err =>
+        showToast(`⚠️ Delete failed — ${err.message}`, 5000)
+      );
     }
   },
 
@@ -166,6 +175,56 @@ export const Storage = {
     return false;
   },
 
+  /* ── AZURE ADAPTER ──────────────────────────────────────── */
+
+  async _loadFromAzure() {
+    const resp = await fetch('/api/records');
+    if (!resp.ok) throw new Error(`Load failed: HTTP ${resp.status}`);
+    const rows = await resp.json();
+    return this._reconstructFromRows(rows);
+  },
+
+  _reconstructFromRows(rows) {
+    // Rebuilds the blob shape that _buildSavePayload() produces so
+    // loadFromStorage() can apply it to the store without changes.
+    const out = {
+      dataVersion:     DATA_VERSION,
+      planSettings:    null,
+      activeLocations: null,
+      employees:       [],
+      entries:         [],
+      monthConfig:     {},
+      state:           {},
+      auditLog:        [],
+    };
+    for (const row of rows) {
+      const parsed = JSON.parse(row.data);
+      if      (row.type === 'employee')  out.employees.push(parsed);
+      else if (row.type === 'entry')     out.entries.push(parsed);
+      else if (row.type === 'month')     out.monthConfig[row.id] = parsed;
+      else if (row.type === 'settings')  out.planSettings    = parsed;
+      else if (row.type === 'locations') out.activeLocations = parsed;
+      else if (row.type === 'appState')  out.state           = parsed;
+      else if (row.type === 'auditLog')  out.auditLog        = Array.isArray(parsed) ? parsed : [];
+    }
+    return out;
+  },
+
+  async _saveRecordToAzure(type, record) {
+    const id = record?.id ?? record?.key ?? 'singleton';
+    const resp = await fetch(`/api/records/${type}/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: record, updatedBy: this.currentUser ?? 'unknown' }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  },
+
+  async _deleteRecordFromAzure(type, id) {
+    const resp = await fetch(`/api/records/${type}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!resp.ok && resp.status !== 404) throw new Error(`HTTP ${resp.status}`);
+  },
+
   /* ── FILE UTILITIES ─────────────────────────────────────── */
 
   exportToFile(data) {
@@ -230,22 +289,19 @@ function _buildSavePayload() {
       return { ...rest, days: allDays };
     }),
     state: {
-      nextId:         s.nextId,
-      nextEmpId:      s.nextEmpId,
-      filterISM:      s.filterISM,
-      filterIPM:      s.filterIPM,
-      filterType:     s.filterType,
-      filterLocation: s.filterLocation,
-      groupBy:        s.groupBy,
-      expandedGroups: s.expandedGroups,
-      sortColumn:     s.sortColumn,
-      sortDirection:  s.sortDirection,
+      nextId:          s.nextId,
+      nextEmpId:       s.nextEmpId,
+      activeFilters:   s.activeFilters,
+      filterRowsShown: s.filterRowsShown,
+      groupBy:         s.groupBy,
+      expandedGroups:  s.expandedGroups,
+      sortColumn:      s.sortColumn,
+      sortDirection:   s.sortDirection,
       viewStartIndex:     s.viewStartIndex,
       showAvailCards:     s.showAvailCards,
       collapseAllEntries: s.collapseAllEntries,
       expandedInSummary:  s.expandedInSummary,
       showArchived:       s.showArchived,
-      filterUtilization:  s.filterUtilization,
     },
     auditLog: getAuditLog(),
   };

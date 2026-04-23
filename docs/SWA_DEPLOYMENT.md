@@ -2,15 +2,13 @@
 
 ## Overview
 
-The capacity planning app targets **Azure Static Web Apps (SWA)** for hosting. The current app (root files) runs without a build step; the SWA rewrite (`src/` → Vite → `dist/`) is in progress.
-
-The storage layer uses a pluggable adapter pattern — switching from `localStorage` to a remote backend (Azure Table Storage, Cosmos DB, or an Azure Function API) requires only implementing the adapter methods in `js/storage.js`, with no changes to app logic.
+The capacity planning app targets **Azure Static Web Apps (SWA)** for hosting. The app lives in `src/` and builds via Vite to `dist/`. The storage layer uses a pluggable adapter pattern — switching from `localStorage` to a remote backend (Azure Table Storage, Cosmos DB, or an Azure Function API) requires only implementing the adapter methods in `src/js/storage.js`, with no changes to app logic.
 
 ---
 
 ## Current Architecture
 
-### Storage Layer (`js/storage.js`)
+### Storage Layer (`src/js/storage.js`)
 
 ```javascript
 const Storage = {
@@ -23,8 +21,8 @@ const Storage = {
   loadAll() { ... },         // Alias for load(); signals remote-adapter intent at call sites
 
   // Per-row API — used by all mutate() call sites since v2.2.7
-  saveRecord(type, record) { ... },   // Upsert one typed record
-  deleteRecord(type, id) { ... },     // Delete one record by id
+  saveRecord(type, record) { ... },   // Upsert one typed record (localStorage: full-blob; azure: per-record)
+  deleteRecord(type, id) { ... },     // Delete one record by id (localStorage: full-blob; azure: per-record)
   setCurrentUser(name) { ... },
 }
 ```
@@ -55,8 +53,8 @@ const Storage = {
 1. In the [Azure portal](https://portal.azure.com), create a new **Static Web App** (free tier)
 2. Connect to your GitHub repository (enables GitHub Actions CI/CD) or choose "Other" for manual deployment
 3. Set build details:
-   - **App location:** `/` (or `/src` once the Vite rewrite is complete)
-   - **Output location:** `dist` (Vite build output) or leave blank for no-build deployment
+   - **App location:** `/` (repository root — Vite config is at root)
+   - **Output location:** `dist` (Vite build output)
 4. Note the deployment token from the SWA resource overview
 
 ### Step 2 — Configure routing
@@ -93,7 +91,7 @@ async function resolveCurrentUser() {
 }
 ```
 
-Call `resolveCurrentUser()` before `loadFromStorage()` in `js/app.js` and `js/settings.js`.
+Call `resolveCurrentUser()` before `loadFromStorage()` in `src/js/app.js`.
 
 ### Step 4 — Deploy
 
@@ -139,21 +137,31 @@ For **Azure Table Storage** directly, or for **Cosmos DB**, consider wrapping th
 
 ## Data Structure (Full-Blob Reference)
 
-Used by the bulk `save()` / `load()` API (undo/redo, initial load):
+Used by the bulk `save()` / `load()` API (undo/redo, initial load). Built by `_buildSavePayload()` in `src/js/storage.js`:
 
 ```javascript
 {
-  employees: [...],
-  entries: [...],
-  months: [...],
+  dataVersion,
+  planSettings:    { planName, planDescription, yellowThreshold, greenThreshold, redThreshold,
+                     fixedCategories, budgetTolerancePct },
+  activeLocations: [...],     // ISO country codes
+  employees:       [...],
+  monthConfig:     {},        // working days / bank holidays keyed by month key
+  entries: [...],             // days serialised as { [monthKey]: days } objects
   state: {
-    nextId,
-    nextEmpId,
-    filterISM,
-    filterIPM,
-    filterType,
-    filterLocation
-  }
+    nextId, nextEmpId,
+    activeFilters,            // [{ field, condition }, ...] — 3 slots
+    filterRowsShown,
+    groupBy,
+    expandedOH, expandedGroups,
+    sortColumn, sortDirection,
+    viewStartIndex,
+    showAvailCards,
+    collapseAllEntries,
+    expandedInSummary,
+    showArchived,
+  },
+  auditLog: [...],            // append-only audit entries (capped 50)
 }
 ```
 
@@ -166,9 +174,6 @@ No Azure account needed for local dev — the app runs entirely on `localStorage
 ```bash
 npm install
 npm run dev       # Vite dev server at http://localhost:5173
-
-# Or without a build step (current app):
-python -m http.server 8000
 ```
 
 To test SWA authentication locally, use the SWA CLI which emulates `/.auth/me`:
@@ -179,11 +184,6 @@ swa start http://localhost:5173 --run "npm run dev"
 ---
 
 ## Deployment Checklist
-
-### Current app (no-build, localStorage only)
-- [ ] Upload root files to SWA via `az staticwebapp deploy` or GitHub Actions
-- [ ] Verify `staticwebapp.config.json` routes work
-- [ ] Test app at the SWA URL
 
 ### Full SWA deployment (with auth + remote storage)
 - [ ] Create SWA resource and connect GitHub repo

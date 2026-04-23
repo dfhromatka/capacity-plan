@@ -20,8 +20,6 @@ Feature IDs use increments of 10 (e.g., #1000, #1010, #1020) to allow for future
 
 ## 🟢 Low Priority
 
-### [#1360] Hierarchical Filter Redesign ✅ Completed v3.18.0
-
 ### [#1170] ~~Framework Migration~~ — *Superseded by v2.0 Alpine.js migration (completed v3.0.0)*
 
 ### [#1180] Azure Back-End Integration & Multi-User
@@ -62,26 +60,6 @@ Tablet and phone optimization:
 - Simplified mobile UI
 - Progressive Web App (PWA) support
 
-### [#1200] Allocation Solver — Budget vs. EPSD Validation
-Extends the existing EPSD allocation prompt (`checkEPSDAllocationPrompt` in `src/js/app.js`)
-to also validate project budget hours against committed allocations.
-
-New field: `entry.budgetHours` (nullable number, entered in hours, stored as hours, divided
-by 8 when comparing against day-based allocations). Appears in the inline row edit panel
-only — no new visible column.
-
-Validation modes:
-- **Budget + EPSD set, allocations exist** — compare total committed days up to EPSD against
-  `budgetHours / 8`; show delta and flag if over/under by >10%
-- **Budget + allocations, no EPSD** — compute implied completion month; flag if it extends
-  beyond the plan horizon
-
-Implementation notes:
-- Extend `checkEPSDAllocationPrompt()` — do not replace it
-- Reuse `showConfirmModal()` for the validation prompt
-- All allocation mutations via `mutate()` for undo/redo
-- Tab sequence unchanged: Project → URL → Notes → EPSD → budget hours → month cells
-
 ### [#1210] ~~Custom Themes~~ — *Merged into #1240*
 
 ### [#1220] Notifications
@@ -121,18 +99,6 @@ Per-month allocation warnings: flag months where a project row's allocation exce
 days, or falls suspiciously low for an active project. Thresholds would likely be
 configurable. May prove unnecessary in practice — defer until user feedback confirms value.
 
-### [#1350] Auto-Fill Allocations from Budget + EPSD ✅ Completed v3.17.0
-When a new Project row is saved with both `budgetHours` and `epsd` set, offer to auto-fill
-the month allocation cells evenly across the period from the current month through EPSD:
-
-- `budgetDays = budgetHours / 8`
-- `months = visibleMonths.slice(currentMonthIdx, epsdIdx + 1)`
-- `daysPerMonth = round(budgetDays / months.length, 0.25)` — rounded to nearest quarter-day
-- Prompt: *"Distribute X budget days evenly as Yd/month through EPSD? (rounded to ¼ day)"*
-- Confirm → fills month cells; Cancel → leaves cells empty
-- Only fires when ALL month cells in the range are zero (don't overwrite existing allocations)
-- Runs after EPSD prompt (if any) — chain at 200ms after save
-
 ---
 
 ## 💡 Future/Research
@@ -161,7 +127,7 @@ Have a feature suggestion? Consider:
 
 ---
 
-*Last Updated: April 22, 2026*  
+*Last Updated: April 23, 2026*  
 *For completed features, see [COMPLETED_FEATURES.md](COMPLETED_FEATURES.md)*
 
-**Next Available Feature ID: #1350** *(#1350–#1990 reserved for v1.x features; #2000–#2060 reserved for v2.x Alpine migration — all completed)*
+**Next Available Feature ID: #1370** *(#1370–#1990 reserved for v1.x features; #2000–#2060 reserved for v2.x Alpine migration — all completed)*

@@ -4,6 +4,25 @@ This document tracks features that have been completed and delivered. Features r
 
 ---
 
+## Version 3.16.x – 3.18.x Features
+
+### [#1360] Hierarchical Filter Redesign
+**Completed**: April 23, 2026 · **Version**: v3.18.0
+
+Replaced 5 individual filter dropdowns (ISM, IPM, Location, Type, All %) with a hierarchical two-dropdown system: select a field first, then a condition. Up to 3 filter slots (AND-combined): slot 1 always visible; slots 2 and 3 appear when the preceding slot is active via the `+` button. New filter fields: RAG Status (Red / Amber / Green) and Project % (Over / Under allocated vs. budget tolerance). Both produce a visual left-border indicator on matching project rows when active. `activeFilters[3]` array replaces `filterISM`, `filterIPM`, `filterType`, `filterLocation`, `filterUtilization` in the store. `customDropdown` component removed; `filterRow(slotIdx)` component added.
+
+### [#1350] Auto-Fill Allocations from Budget + EPSD
+**Completed**: April 23, 2026 · **Version**: v3.17.0
+
+When a new Project row is saved with both `budgetHours` and `epsd` set and all month cells are zero, `checkAutoFillPrompt()` fires after save and offers to distribute the budget evenly across the period from current month through EPSD. Calculation: `daysPerMonth = round(budgetDays / monthCount, 0.25)` — rounded to nearest ¼ day. Confirm fills all months in range; Cancel leaves cells empty. No-op if any month cell already has a value. Undo (`Ctrl+Z`) reverts in one step.
+
+### [#1200] Allocation Solver — Budget vs. EPSD Validation
+**Completed**: April 22, 2026 · **Version**: v3.16.0
+
+New field `entry.budgetHours` (nullable number): project budget in hours, divided by 8 when comparing against day-based allocations. Inline edit panel: budget hours input inside the EPSD cell (Project type only); read mode shows budget below EPSD date when set. Validation on save: `checkBudgetAllocationPrompt()` fires and compares committed days against budget — warns if delta exceeds configurable tolerance. Tolerance setting: `planSettings.budgetTolerancePct` (default 10%), configurable in Settings → Plan Settings. CSV export/import includes `budgetHours` column. Migration: `_migrateData()` sets `budgetHours = null` on entries lacking the field.
+
+---
+
 ## Version 3.15.x Features
 
 ### [#1310] Configurable Fixed Allocation Categories
