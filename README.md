@@ -31,13 +31,13 @@ npm run dev
 
 ## Key Features
 
-- **Resource Planning** — track capacity across a configurable month range
+- **Resource Planning** — track capacity across a rolling, auto-extended
+- month range
 - **Employee Management** — teams, locations, fixed allocations
-- **5 Fixed Allocation Types** — Admin, Training, Internal Initiatives, CIP Support, E&C Activity
+- **Configurable Fixed Allocation Types** — user defined
 - **Auto-Save** — localStorage persistence with 500ms debounce
 - **Undo/Redo** — full history management (up to 50 steps)
-- **Keyboard Shortcuts** — Ctrl+F (filter), Ctrl+, (settings), Ctrl+Z (undo), Shift+? (help)
-- **Multi-Location** — France and Prague bank holiday calendars
+- **Multi-Location** — Configurable ISO countries 
 - **Visual Analytics** — monthly availability cards and capacity chart
 
 ---
