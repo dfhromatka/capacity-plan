@@ -296,8 +296,8 @@
             <th class="col-notes col-info tl sortable" @click="$store.plan.toggleSort('status')">
               Status / Notes <span x-text="$store.plan.sortColumn === 'status' ? ($store.plan.sortDirection === 'asc' ? '↑' : '↓') : ''"></span>
             </th>
-            <th class="col-epsd col-info" title="Estimated Production Site Date">
-              <div class="col-header-label">EPSD</div>
+            <th class="col-epsd col-info sortable" title="Estimated Production Site Date" @click="$store.plan.toggleSort('epsd')">
+              <div class="col-header-label">EPSD <span x-text="$store.plan.sortColumn === 'epsd' ? ($store.plan.sortDirection === 'asc' ? '↑' : '↓') : ''"></span></div>
             </th>
             <th class="col-rag col-info" title="RAG Status (Red/Amber/Green)">
               <div class="col-header-label">RAG</div>
@@ -411,7 +411,8 @@
                 <span x-show="!isEditing"
                   :class="row.type === 'Project' ? 'badge badge-project' : row.type === 'Other' ? 'badge badge-other' : 'badge badge-absence'"
                   class="badge" x-text="row.type" @click="startEdit && startEdit()"></span>
-                <select x-show="isEditing" x-model="editType" class="inline-edit entry-type-select">
+                <select x-show="isEditing" x-model="editType" class="inline-edit entry-type-select"
+                  @keydown="handleKeydown($event)">
                   <option value="Project">Project</option>
                   <option value="Other">Other</option>
                   <option value="Absence">Absence</option>
@@ -434,7 +435,8 @@
                 <div x-show="isEditing">
                   <div class="entry-proj-edit-row">
                     <input x-ref="editProject" type="text" x-model="editProject"
-                      placeholder="Project name" class="inline-edit entry-proj-input">
+                      placeholder="Project name" class="inline-edit entry-proj-input"
+                      @keydown="handleKeydown($event)">
                     <button type="button" @click.stop="toggleUrlRow()" title="Add/edit link (Ctrl+K)"
                       class="btn-link-toggle"
                       :style="{color: editUrl ? 'var(--color-primary-light)' : 'var(--color-gray-300)'}">🔗</button>
@@ -442,7 +444,8 @@
                   <div x-show="showUrlRow" class="entry-url-row">
                     <input x-ref="editUrl" type="url" x-model="editUrl"
                       placeholder="https://..." class="inline-edit entry-url-input"
-                      :tabindex="showUrlRow ? 0 : -1">
+                      :tabindex="showUrlRow ? 0 : -1"
+                      @keydown="handleKeydown($event)">
                     <button type="button"
                       @click.stop="editUrl=''; showUrlRow=false; $nextTick(()=>$refs.editProject?.focus())"
                       title="Remove link"
@@ -454,7 +457,8 @@
               <td class="col-notes col-info tl" :class="[!isEditing ? 'editable' : 'col-notes--editing']" @click="!isEditing && startEdit()">
                 <span x-show="!isEditing" class="entry-status-text" x-text="row.status || '—'"></span>
                 <textarea x-show="isEditing" x-model="editStatus" placeholder="Status/notes"
-                  rows="4" class="inline-edit entry-notes-input"></textarea>
+                  rows="4" class="inline-edit entry-notes-input"
+                  @keydown="handleKeydown($event)"></textarea>
               </td>
               <!-- EPSD -->
               <td class="col-epsd col-info"
@@ -469,11 +473,13 @@
                       x-text="row.budgetHours + 'h'"></div>
                   </div>
                 </template>
-                <input x-show="isEditing" type="date" x-model="editEpsd" class="inline-edit entry-epsd-input">
+                <input x-show="isEditing" type="date" x-model="editEpsd" class="inline-edit entry-epsd-input"
+                  @keydown="handleKeydown($event)">
                 <div x-show="isEditing" class="budget-hours-row">
                   <input type="number" min="0" step="8" x-model="editBudgetHours"
                     placeholder="Budget h" class="inline-edit entry-budget-input"
-                    title="Project budget in hours (÷8 = days)">
+                    title="Project budget in hours (÷8 = days)"
+                    @keydown="handleKeydown($event)">
                 </div>
               </td>
               <!-- RAG -->

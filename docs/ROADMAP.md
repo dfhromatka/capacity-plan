@@ -101,13 +101,6 @@ Configurable user-level settings and visual customisation:
 - **Custom chart config** — Axis metric (days vs. %), grouping, visible series (cosmetic polish)
 - Stored per user in localStorage; smart defaults from browser locale
 
-### [#1320] Drag & Drop Row Reordering *(unscoped)*
-- Drag handle on each row
-- Visual feedback during drag
-- Reorder within employee section
-- Persists order preference
-- Works with filtered/sorted views
-
 ### [#1330] Bank Holiday Auto-Fetch *(unscoped)*
 Automatic bank holiday fetching with smart working day calculation:
 - **API integration** - Fetch holidays from public APIs (e.g., Calendarific, Nager.Date)

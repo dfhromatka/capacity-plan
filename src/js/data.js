@@ -338,6 +338,13 @@ export function sortEntries(entriesList, column, direction) {
       case 'type':    valA = rankA;                              valB = rankB;                              break;
       case 'project': valA = (a.project||'').toLowerCase();     valB = (b.project||'').toLowerCase();     break;
       case 'status':  valA = (a.status||'').toLowerCase();      valB = (b.status||'').toLowerCase();      break;
+      case 'epsd': {
+        // nulls always sort last regardless of direction
+        if (!a.epsd && !b.epsd) return 0;
+        if (!a.epsd) return 1;
+        if (!b.epsd) return -1;
+        valA = a.epsd; valB = b.epsd; break;
+      }
       default: return 0;
     }
     if (valA < valB) return -1 * mult;

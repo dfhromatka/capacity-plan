@@ -79,24 +79,18 @@ project/activity field. Apply this two-key comparator whenever any column sort i
 
 ---
 
-### KB-01 — Keyboard shortcuts blocked in inline edit mode 🟡
+### KB-01 — Keyboard shortcuts blocked in inline edit mode ✅ Fixed v3.17.0
 
-**File:** `src/js/keyboard.js`, `src/js/components.js`
+**File:** `src/js/keyboard.js`
 
-**Symptom:** Global keyboard shortcuts (e.g. Escape to cancel, Ctrl+Z undo) do not fire when
-the user is in inline row edit mode and focus is on a non-cell element — e.g. the project
-name input, the notes textarea, or the EPSD date picker. Shortcuts only work when a month
-cell input is focused.
-
-**Likely cause:** `keyboard.js` guards against firing shortcuts when focus is inside an
-`<input>`, `<textarea>`, or `<select>` to avoid interfering with text entry — but this
-over-suppresses shortcuts like Escape (cancel edit) and Ctrl+Z (undo) that should always
-be available regardless of which field has focus within the edit row.
-
-**Fix direction:** In the keydown guard in `keyboard.js`, allow specific shortcuts
-(at minimum: Escape, Ctrl+Z, Ctrl+Shift+Z) to pass through even when an input is focused.
-The `tableRow` component in `components.js` already has `cancel()` and `save()` methods
-that can be called directly.
+**Fix:** Two-part fix:
+1. Escape is handled in the global `document` keydown listener before the `isInInput` guard —
+   needed because date picker inputs consume Escape at the browser level before it bubbles.
+2. `@keydown="handleKeydown($event)"` added directly to all non-month edit inputs (type select,
+   project name, URL, notes textarea, EPSD date, budget hours) — event bubbling from these
+   inputs to the `<tr>` was unreliable. Month cell inputs were unaffected.
+   Notes textarea preserves natural Enter (newline) via the existing `inNotesTextarea` guard;
+   Shift+Enter still saves.
 
 ---
 
@@ -151,7 +145,7 @@ Full audit of all settings tabs confirmed — no other spacing-wrapper patterns 
 | FIX-04 | ✅ Fixed v3.16.0 | `src/js/store.js` | insertEntryAfter: sort cleared + temp ID so cancel() cleans up |
 | SORT-01 | ✅ Fixed v3.16.0 | `src/js/data.js` | sortEntries: type-rank primary key preserves Project→Other→Absence grouping |
 | EPSD-01 | ✅ Fixed v3.16.0 | `src/js/components.js` | Budget prompt (150ms) overwrote EPSD prompt (100ms); now mutually exclusive per save |
-| KB-01 | 🟡 Important | `src/js/keyboard.js`, `src/js/components.js` | Shortcuts suppressed in inline edit mode when non-cell input focused |
+| KB-01 | ✅ Fixed v3.17.0 | `src/js/keyboard.js` | Escape now handled globally before isInInput guard; fires even from date picker |
 | PERF-10 | ✅ Fixed v3.14.2 | `src/index.html` | x-if rowType gate — DOM nodes ~200k → ~26k |
 | ARCH-04 | 🟡 Important | any `x-for` with multi-type templates | Watch for; no other instances found v3.14.2 |
 | TOKEN-01 | ✅ Fixed v3.14.3 | `src/css/design-tokens.css`, `styles.css` | 12 alias/dead tokens removed; ~87 replacements |
