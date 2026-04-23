@@ -216,11 +216,11 @@ tbody .col-proj {
   color: var(--color-gray-300);
   flex-shrink: 0;
 }
-.row-action-btn--insert  { font-size: 15px; font-weight: var(--font-semibold); margin-right: 0; color: var(--color-text-secondary); }
+.row-action-btn--insert  { font-size: var(--text-xl); font-weight: var(--font-semibold); margin-right: 0; color: var(--color-text-secondary); }
 .row-action-btn--insert:hover  { color: var(--color-primary); }
 .row-action-btn--dismiss { color: var(--color-text-secondary); font-size: var(--font-size-base); font-weight: var(--font-semibold); }
 .row-action-btn--dismiss:hover { color: var(--color-danger-error); }
-.row-action-btn--restore { font-size: 13px; color: var(--color-primary); font-weight: var(--font-semibold); }
+.row-action-btn--restore { font-size: var(--text-lg); color: var(--color-primary); font-weight: var(--font-semibold); }
 .row-action-btn--restore:hover { color: var(--color-success); }
 .row-archived { opacity: 0.45; font-style: italic; }
 
@@ -920,7 +920,7 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 /* ── Body helpers ─────────────────────────────────────────────── */
 .modal__message { color: var(--color-text-primary); margin: 0; line-height: 1.5; }
 .modal__hint    { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0 0 var(--space-2); }
-.modal__hint-inline { color: var(--color-text-muted); font-size: var(--font-size-sm); font-weight: normal; }
+.modal__hint-inline { color: var(--color-text-muted); font-size: var(--font-size-sm); font-weight: var(--font-normal); }
 
 .entry-action-options { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }
 .entry-action-option { display: flex; flex-direction: column; gap: 2px; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--color-surface-raised); }
@@ -2099,6 +2099,11 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   gap: var(--space-5);
 }
 
+.kbd-help__sections--settings {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  max-width: 800px;
+}
+
 .kbd-help__section-title {
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
@@ -2621,7 +2626,7 @@ thead .col-rag, thead .col-epsd { text-align: center; }
 .entry-epsd-input { width: 100%; font-size: var(--text-base); padding: 2px var(--space-1); border: var(--border-thin) solid var(--color-gray-300); border-radius: var(--radius-base); }
 .budget-hours-row { margin-top: var(--space-1); }
 .entry-budget-input { width: 5.5rem; font-size: var(--text-sm); padding: 2px var(--space-1); border: var(--border-thin) solid var(--color-gray-300); border-radius: var(--radius-base); }
-.budget-hours-display { font-size: var(--text-sm); color: var(--color-gray-neutral-400); margin-top: 2px; }
+.budget-hours-display { font-size: var(--text-sm); color: var(--color-gray-neutral-400); margin-top: var(--space-1); }
 .entry-status-text { font-size: var(--text-md); color: var(--color-gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 textarea.inline-edit.entry-notes-input { width: 100%; box-sizing: border-box; resize: none; font-family: inherit; font-size: var(--text-md); line-height: 1.4; text-align: left; }
 .col-notes--editing { overflow: visible; }
@@ -2641,6 +2646,9 @@ textarea.inline-edit.entry-notes-input { width: 100%; box-sizing: border-box; re
 
 .table-legend kbd { font-size: var(--text-xs); padding: 1px var(--space-1); font-family: monospace; font-weight: var(--font-normal); box-shadow: none; }
 .legend-sep { margin: 0 var(--space-2); }
+.legend-kbd-link { background: none; border: none; padding: 0; margin: 0; cursor: pointer; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.legend-kbd-link:hover { color: var(--color-accent); }
+.legend-kbd-link:focus-visible { outline: 2px solid var(--color-primary-focus); border-radius: var(--radius-sm); outline-offset: 1px; }
 .legend-avail-swatch { display: inline-block; width: 10px; height: 10px; border-radius: var(--radius-sm); vertical-align: middle; margin-right: 3px; }
 .legend-avail-swatch--green  { background: var(--color-success-bg);  border: var(--border-thin) solid var(--color-success-light); }
 .legend-avail-swatch--yellow { background: var(--color-warning-bg);  border: var(--border-thin) solid var(--color-warning-light); }

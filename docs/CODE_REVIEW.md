@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-23 (v3.17.0)
+> **Last updated:** 2026-04-23 (v3.19.0)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -219,13 +219,9 @@ async exportData() {
 
 ---
 
-### STOR-08 — Keyboard help advertises Ctrl+Z / Ctrl+Y but undo/redo is not implemented 🟡
+### STOR-08 — Keyboard help advertised Ctrl+Z / Ctrl+Y but undo/redo was not implemented ✅ Fixed v3.19.0
 
-**File:** `src/index.html` (keyboard help modal), `src/js/keyboard.js`, `src/js/history.js`
-
-`history.js` has no undo/redo stack. `keyboard.js` has no Ctrl+Z / Ctrl+Y handler. The UI actively advertises these shortcuts, which will confuse users. This is the deferred #1150 issue.
-
-**Fix direction (pre-Azure):** Either remove Ctrl+Z / Ctrl+Y from the keyboard help modal until the feature is implemented, or implement a minimal in-memory stack in `history.js`. The stack must not be persisted.
+Removed both shortcuts from the keyboard help overlay. No handler existed in `keyboard.js` and no undo stack in `history.js`. Deferred undo/redo is tracked separately as #1150.
 
 ---
 
@@ -593,7 +589,7 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | STOR-05 | 🔴 Critical | `src/js/storage.js` | `saveRecord`/`deleteRecord` azure branch not returning Promise |
 | STOR-06 | 🟡 Important | `src/js/storage.js` | `_buildSavePayload` persists transient UI state |
 | STOR-07 | 🟡 Important | `src/js/settings-page.js` | `exportData()` calls `Storage.load()` in a click handler |
-| STOR-08 | 🟡 Important | `src/index.html`, `src/js/keyboard.js`, `src/js/history.js` | Ctrl+Z/Y advertised but not implemented |
+| STOR-08 | ✅ Fixed v3.19.0 | `src/index.html` | Ctrl+Z/Y removed from keyboard overlay |
 | STOR-09 | 🟢 Enhancement | `src/js/storage.js` | Write queue flush TOCTOU race |
 | STORAGE-01 | 🟡 Important | `src/js/storage.js` | `_buildSavePayload` may zero out-of-window allocations |
 | A11Y-05 | 🟡 Important | `src/index.html` | Toggle icons use `<span role="button">` not `<button>` |

@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.19.0] - 2026-04-23
+
+### Added
+- **Multi-select filter conditions** — ISM, IPM, and Location filter slots now support selecting multiple values; panel stays open while toggling; label summarises selections (e.g. "Alice (+2)"). Single-select preserved for IPM%, Project%, and RAG filters.
+- **Keyboard Shortcuts settings tab** — Read-only reference panel in Settings listing all active shortcuts; accessible via `settings.html?tab=keyboard`.
+- **Footer shortcut hints** — Footer now shows `Ctrl+F` and a `Shift+? all shortcuts` button that opens the keyboard overlay.
+
+### Changed
+- **EPSD column** widened from 108 px to 132 px; Notes column narrowed from 272 px to 248 px. Reduces cell padding in edit mode so date and budget inputs render without overflow.
+- **Budget input** changed to `width: 100%` to fill available column width in edit mode.
+- **Sub-total row** — removed "∑ entries" label text; summary numbers remain.
+- **Keyboard shortcuts overlay** — removed Ctrl+Z / Ctrl+Y (unimplemented undo/redo) to avoid misleading users (resolves STOR-08).
+- **EPSD display** state now uses CSS classes (`epsd-display--set` / `epsd-display--empty`) instead of inline `:style` fontWeight binding.
+
+### Fixed
+- `font-weight: normal` → `var(--font-normal)` in `.modal__hint-inline` (CSS-* debt).
+- `.row-action-btn--insert` `15px` and `.row-action-btn--restore` `13px` hardcoded font sizes replaced with design tokens.
+- `margin-top: 2px` in `.budget-hours-display` replaced with `var(--space-1)`.
+
 ## [3.18.0] - 2026-04-23
 
 ### Added — #1360: Hierarchical Filter Redesign

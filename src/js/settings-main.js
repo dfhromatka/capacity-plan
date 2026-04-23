@@ -7,7 +7,12 @@ import { registerStores } from './store.js';
 
 registerStores(Alpine);
 
-Alpine.data('settingsPage', settingsPage);
+Alpine.data('settingsPage', () => {
+  const page = settingsPage();
+  const tab = new URLSearchParams(location.search).get('tab');
+  if (tab) page.currentTab = tab;
+  return page;
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   Alpine.start();

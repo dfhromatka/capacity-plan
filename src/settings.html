@@ -43,6 +43,11 @@
       :aria-selected="currentTab === 'history'" title="History (← →)">
       History
     </button>
+    <button class="settings-tab" :class="{'active': currentTab === 'keyboard'}"
+      @click="switchTab('keyboard')" role="tab"
+      :aria-selected="currentTab === 'keyboard'" title="Keyboard Shortcuts (← →)">
+      Keyboard Shortcuts
+    </button>
   </div>
 
   <!-- ── TAB 0: PLAN SETTINGS ─────────────────────────────────── -->
@@ -538,6 +543,61 @@
             </div>
           </div>
         </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 5: KEYBOARD SHORTCUTS ─────────────────────────── -->
+  <div class="settings-content" x-show="currentTab === 'keyboard'">
+    <div>
+      <div class="settings-section-header">
+        <h2 class="settings-section-header__title">Keyboard Shortcuts</h2>
+        <p class="settings-section-header__subtitle">Read-only reference. All shortcuts are active on the main plan view.</p>
+      </div>
+      <div class="kbd-help__sections kbd-help__sections--settings">
+        <div class="kbd-help__section">
+          <h3 class="kbd-help__section-title">Navigation</h3>
+          <div class="kbd-help__rows">
+            <div class="kbd-row">
+              <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>F</kbd></div>
+              <span class="kbd-row__desc">Focus filters</span>
+            </div>
+            <div class="kbd-row">
+              <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>,</kbd></div>
+              <span class="kbd-row__desc">Open settings</span>
+            </div>
+          </div>
+        </div>
+        <div class="kbd-help__section">
+          <h3 class="kbd-help__section-title">Editing</h3>
+          <div class="kbd-help__rows">
+            <div class="kbd-row">
+              <div class="kbd-row__keys"><kbd>Enter</kbd></div>
+              <span class="kbd-row__desc">Save current edit</span>
+            </div>
+            <div class="kbd-row">
+              <div class="kbd-row__keys"><kbd>Shift</kbd><span class="kbd-row__sep">+</span><kbd>Enter</kbd></div>
+              <span class="kbd-row__desc">Save and add new row</span>
+            </div>
+            <div class="kbd-row">
+              <div class="kbd-row__keys"><kbd>Esc</kbd></div>
+              <span class="kbd-row__desc">Cancel editing</span>
+            </div>
+            <div class="kbd-row">
+              <div class="kbd-row__keys"><kbd>Tab</kbd></div>
+              <span class="kbd-row__desc">Move to next field</span>
+            </div>
+          </div>
+        </div>
+        <div class="kbd-help__section">
+          <h3 class="kbd-help__section-title">Help</h3>
+          <div class="kbd-help__rows">
+            <div class="kbd-row">
+              <div class="kbd-row__keys"><kbd>Shift</kbd><span class="kbd-row__sep">+</span><kbd>?</kbd></div>
+              <span class="kbd-row__desc">Show keyboard shortcuts overlay</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

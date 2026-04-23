@@ -97,9 +97,9 @@
         <div class="filter-panel-opts">
           <template x-for="(opt, idx) in visibleCondOpts" :key="opt.value">
             <div data-cond-opt tabindex="-1" @click="selectCond(opt.value)" @keydown="keyNavCond($event, idx)"
-              :aria-selected="opt.value === condition" class="filter-opt">
+              :aria-selected="isCondSelected(opt.value)" class="filter-opt">
               <span x-text="opt.label"></span>
-              <span x-show="opt.value === condition" class="filter-opt-check">✓</span>
+              <span x-show="isCondSelected(opt.value)" class="filter-opt-check">✓</span>
             </div>
           </template>
         </div>
@@ -145,9 +145,9 @@
         <div class="filter-panel-opts">
           <template x-for="(opt, idx) in visibleCondOpts" :key="opt.value">
             <div data-cond-opt tabindex="-1" @click="selectCond(opt.value)" @keydown="keyNavCond($event, idx)"
-              :aria-selected="opt.value === condition" class="filter-opt">
+              :aria-selected="isCondSelected(opt.value)" class="filter-opt">
               <span x-text="opt.label"></span>
-              <span x-show="opt.value === condition" class="filter-opt-check">✓</span>
+              <span x-show="isCondSelected(opt.value)" class="filter-opt-check">✓</span>
             </div>
           </template>
         </div>
@@ -192,9 +192,9 @@
         <div class="filter-panel-opts">
           <template x-for="(opt, idx) in visibleCondOpts" :key="opt.value">
             <div data-cond-opt tabindex="-1" @click="selectCond(opt.value)" @keydown="keyNavCond($event, idx)"
-              :aria-selected="opt.value === condition" class="filter-opt">
+              :aria-selected="isCondSelected(opt.value)" class="filter-opt">
               <span x-text="opt.label"></span>
-              <span x-show="opt.value === condition" class="filter-opt-check">✓</span>
+              <span x-show="isCondSelected(opt.value)" class="filter-opt-check">✓</span>
             </div>
           </template>
         </div>
@@ -540,19 +540,22 @@
                 <template x-if="!isEditing && row.type === 'Project'">
                   <div>
                     <div class="epsd-display"
-                      :style="{color: row.epsd ? 'var(--color-gray-600)' : 'var(--color-gray-300)', fontWeight: row.epsd ? '600' : 'normal'}"
+                      :style="row.epsd ? 'color:var(--color-gray-600);font-weight:var(--font-semibold)' : 'color:var(--color-gray-300)'"
                       x-text="row.epsdDisplay"></div>
                     <div x-show="row.budgetHours" class="budget-hours-display"
                       x-text="row.budgetHours + 'h'"></div>
                   </div>
                 </template>
-                <input x-show="isEditing" type="date" x-model="editEpsd" class="inline-edit entry-epsd-input"
-                  @keydown="handleKeydown($event)">
-                <div x-show="isEditing" class="budget-hours-row">
-                  <input type="number" min="0" step="8" x-model="editBudgetHours"
-                    placeholder="Budget h" class="inline-edit entry-budget-input"
-                    title="Project budget in hours (÷8 = days)"
+                <div x-show="isEditing">
+                  <input type="date" x-model="editEpsd" x-ref="epsdInput"
+                    class="inline-edit entry-epsd-input"
                     @keydown="handleKeydown($event)">
+                  <div class="budget-hours-row">
+                    <input type="number" min="0" step="8" x-model="editBudgetHours"
+                      placeholder="Budget h" class="inline-edit entry-budget-input"
+                      title="Project budget in hours (÷8 = days)"
+                      @keydown="handleKeydown($event)">
+                  </div>
                 </div>
               </td>
               <!-- RAG -->
@@ -598,7 +601,7 @@
             <!-- Sub-total row -->
             <template x-if="row.rowType === 'sub'">
             <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-sub">
-              <td class="col-type col-info tl sub-label">∑ entries</td>
+              <td class="col-type col-info tl sub-label"></td>
               <td class="col-proj col-info"></td><td class="col-notes col-info"></td><td class="col-epsd col-info"></td><td class="col-rag col-info"></td>
               <template x-for="cell in row.subCells" :key="cell.key">
                 <td class="col-month sub-month-val"
@@ -631,7 +634,9 @@
       <kbd>Enter</kbd> save &nbsp;·&nbsp;
       <kbd>Shift+Enter</kbd> save + add row &nbsp;·&nbsp;
       <kbd>ESC</kbd> cancel &nbsp;·&nbsp;
-      <kbd>Tab</kbd> next field
+      <kbd>Tab</kbd> next field &nbsp;·&nbsp;
+      <kbd>Ctrl+F</kbd> focus filters &nbsp;·&nbsp;
+      <button type="button" class="legend-kbd-link" @click="$store.ui.showKeyboardHelp = true"><kbd>Shift+?</kbd> all shortcuts</button>
       <span class="legend-sep">|</span>
       <span class="legend-avail-swatch legend-avail-swatch--green"></span>
       <span x-text="'≥ ' + $store.plan.planSettings.greenThreshold + '% free'"></span> &nbsp;·&nbsp;
@@ -855,18 +860,9 @@
                 <div class="kbd-row__keys"><kbd>Esc</kbd></div>
                 <span class="kbd-row__desc">Cancel editing</span>
               </div>
-            </div>
-          </div>
-          <div class="kbd-help__section">
-            <h3 class="kbd-help__section-title">History</h3>
-            <div class="kbd-help__rows">
               <div class="kbd-row">
-                <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>Z</kbd></div>
-                <span class="kbd-row__desc">Undo last change</span>
-              </div>
-              <div class="kbd-row">
-                <div class="kbd-row__keys"><kbd>Ctrl</kbd><span class="kbd-row__sep">+</span><kbd>Y</kbd></div>
-                <span class="kbd-row__desc">Redo</span>
+                <div class="kbd-row__keys"><kbd>Tab</kbd></div>
+                <span class="kbd-row__desc">Move to next field</span>
               </div>
             </div>
           </div>

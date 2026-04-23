@@ -233,9 +233,21 @@ export function registerStores(Alpine) {
         if (!f.field || !f.condition) continue;
         const tol = this.planSettings.budgetTolerancePct ?? 10;
         switch (f.field) {
-          case 'ism':      emps = emps.filter(e => e.ism      === f.condition); break;
-          case 'ipm':      emps = emps.filter(e => e.id       === f.condition); break;
-          case 'location': emps = emps.filter(e => e.location === f.condition); break;
+          case 'ism': {
+            const vals = Array.isArray(f.condition) ? f.condition : [f.condition];
+            emps = emps.filter(e => vals.includes(e.ism));
+            break;
+          }
+          case 'ipm': {
+            const vals = Array.isArray(f.condition) ? f.condition : [f.condition];
+            emps = emps.filter(e => vals.includes(e.id));
+            break;
+          }
+          case 'location': {
+            const vals = Array.isArray(f.condition) ? f.condition : [f.condition];
+            emps = emps.filter(e => vals.includes(e.location));
+            break;
+          }
           case 'ipm_pct': {
             const vis = this.visibleMonths;
             const overT  = 1 - (this.planSettings.yellowThreshold || 10) / 100;
@@ -321,7 +333,10 @@ export function registerStores(Alpine) {
     },
 
     get hasActiveFilters() {
-      return this.activeFilters.some(f => f.field !== null && f.condition !== null);
+      return this.activeFilters.some(f => {
+        if (!f.field || f.condition === null) return false;
+        return Array.isArray(f.condition) ? f.condition.length > 0 : true;
+      });
     },
 
     get cardData() {
@@ -504,6 +519,17 @@ export function registerStores(Alpine) {
     setFilter(slotIdx, field, condition) {
       this.activeFilters = this.activeFilters.map((f, i) =>
         i === slotIdx ? { field, condition } : f
+      );
+    },
+
+    toggleFilterCondition(slotIdx, val) {
+      const f = this.activeFilters[slotIdx];
+      const current = Array.isArray(f.condition) ? f.condition : (f.condition ? [f.condition] : []);
+      const next = current.includes(val)
+        ? current.filter(v => v !== val)
+        : [...current, val];
+      this.activeFilters = this.activeFilters.map((af, i) =>
+        i === slotIdx ? { ...af, condition: next.length > 0 ? next : null } : af
       );
     },
 

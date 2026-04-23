@@ -81,13 +81,33 @@ export function registerComponents(Alpine) {
     get slot()      { return Alpine.store('plan').activeFilters[slotIdx]; },
     get field()     { return this.slot?.field     ?? null; },
     get condition() { return this.slot?.condition ?? null; },
-    get isActive()  { return this.field !== null && this.condition !== null; },
+    get isMultiSelect() { return ['ism', 'ipm', 'location'].includes(this.field); },
+    get condArray() {
+      if (!this.condition) return [];
+      return Array.isArray(this.condition) ? this.condition : [this.condition];
+    },
+    get isActive()  {
+      if (!this.field) return false;
+      if (this.isMultiSelect) return this.condArray.length > 0;
+      return this.condition !== null;
+    },
+    isCondSelected(val) {
+      if (this.isMultiSelect) return this.condArray.includes(val);
+      return val === this.condition;
+    },
 
     get fieldLabel() {
       return this.fieldOpts.find(o => o.value === this.field)?.label ?? 'Filter by';
     },
     get condLabel() {
       if (!this.field) return '';
+      if (this.isMultiSelect) {
+        const arr = this.condArray;
+        if (arr.length === 0) return 'Select…';
+        if (arr.length === 1) return this.condOpts.find(o => o.value === arr[0])?.label ?? arr[0];
+        const first = this.condOpts.find(o => o.value === arr[0])?.label ?? arr[0];
+        return `${first} (+${arr.length - 1})`;
+      }
       return this.condOpts.find(o => o.value === this.condition)?.label ?? 'Select…';
     },
 
@@ -139,8 +159,13 @@ export function registerComponents(Alpine) {
     },
 
     selectCond(val) {
-      Alpine.store('plan').setFilter(slotIdx, this.field, val);
-      this.condOpen = false;
+      if (this.isMultiSelect) {
+        Alpine.store('plan').toggleFilterCondition(slotIdx, val);
+        // Keep panel open for multi-select; restart filter-match animation
+      } else {
+        Alpine.store('plan').setFilter(slotIdx, this.field, val);
+        this.condOpen = false;
+      }
       // If a row already had row-filter-match the class never leaves, so the CSS
       // animation doesn't restart. Force-restart it after Alpine re-renders.
       this.$nextTick(() => {
