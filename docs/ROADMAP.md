@@ -126,7 +126,7 @@ Per-month allocation warnings: flag months where a project row's allocation exce
 days, or falls suspiciously low for an active project. Thresholds would likely be
 configurable. May prove unnecessary in practice — defer until user feedback confirms value.
 
-### [#1350] Auto-Fill Allocations from Budget + EPSD *(unscoped)*
+### [#1350] Auto-Fill Allocations from Budget + EPSD ✅ Completed v3.17.0
 When a new Project row is saved with both `budgetHours` and `epsd` set, offer to auto-fill
 the month allocation cells evenly across the period from the current month through EPSD:
 

@@ -115,3 +115,50 @@ export function checkBudgetAllocationPrompt(entry) {
   showConfirmModal({ title, message, confirmText: 'OK', isDangerous: false });
 }
 
+
+/* ── AUTO-FILL ALLOCATIONS (new row, budget + EPSD set) ──────── */
+
+export function checkAutoFillPrompt(entry) {
+  if (entry.type !== 'Project') return;
+  if (!entry.budgetHours || !entry.epsd) return;
+  if (entry.days.some(d => d > 0)) return;
+
+  const budgetDays = entry.budgetHours / 8;
+  if (budgetDays <= 0) return;
+
+  const epsdMonthKey = getMonthKeyFromDate(entry.epsd);
+  const epsdIdx = epsdMonthKey ? (monthIdxMap.get(epsdMonthKey) ?? -1) : -1;
+  if (epsdIdx === -1) return;
+
+  const todayKey = new Date().toISOString().slice(0, 7);
+  const startIdx = monthIdxMap.get(todayKey) ?? 0;
+  if (startIdx > epsdIdx) return;
+
+  const monthCount = epsdIdx - startIdx + 1;
+  const perMonth = Math.round((budgetDays / monthCount) * 4) / 4;
+  if (perMonth <= 0) return;
+
+  const startShort = state.months[startIdx]?.short ?? '?';
+  const epsdShort  = state.months[epsdIdx]?.short  ?? '?';
+
+  showConfirmModal({
+    title: 'Auto-Fill Allocations?',
+    message: `Distribute ${budgetDays.toFixed(1)}d evenly as ${perMonth}d/month`
+      + ` from ${startShort} through ${epsdShort}?\n\n`
+      + `(${monthCount} month${monthCount > 1 ? 's' : ''}, rounded to nearest ¼ day)`,
+    confirmText: 'Auto-Fill',
+    cancelText: 'Leave Empty',
+    onConfirm: () => {
+      mutate('autoFillAllocations', () => {
+        const s = Alpine.store('plan');
+        s.entries = s.entries.map(e => {
+          if (e.id !== entry.id) return e;
+          const newDays = [...e.days];
+          for (let i = startIdx; i <= epsdIdx; i++) newDays[i] = perMonth;
+          return { ...e, days: newDays };
+        });
+      }, { entryId: entry.id, daysPerMonth: perMonth, months: monthCount },
+        { type: 'entry', record: entry });
+    }
+  });
+}

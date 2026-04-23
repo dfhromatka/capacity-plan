@@ -9,7 +9,7 @@ import { getCountryByCode, getCountryFlag } from './countries.js';
 import { mutate } from './history.js';
 import { showConfirmModal } from './modals.js';
 import { triggerAutoSave, Storage } from './storage.js';
-import { checkEPSDAllocationPrompt, checkBudgetAllocationPrompt } from './app.js';
+import { checkEPSDAllocationPrompt, checkBudgetAllocationPrompt, checkAutoFillPrompt } from './app.js';
 
 export function registerComponents(Alpine) {
 
@@ -445,6 +445,11 @@ export function registerComponents(Alpine) {
           Alpine.store('plan').entries.find(e => e.id === savedId) || entry,
           oldEPSD, newEpsd
         ), 100);
+        if (isNew) {
+          setTimeout(() => checkAutoFillPrompt(
+            Alpine.store('plan').entries.find(e => e.id === savedId) || entry
+          ), 200);
+        }
       } else {
         setTimeout(() => checkBudgetAllocationPrompt(
           Alpine.store('plan').entries.find(e => e.id === savedId) || entry

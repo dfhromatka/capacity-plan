@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.17.0] - 2026-04-23
+
+### Added — #1350: Auto-Fill Allocations from Budget + EPSD
+
+- When a **new** Project row is saved with both `budgetHours` and `epsd` set and all month cells are zero, `checkAutoFillPrompt()` fires after save and offers to distribute the budget evenly across the period.
+- Calculation: `daysPerMonth = round(budgetDays / monthCount, 0.25)` — rounded to nearest ¼ day; period is current month through EPSD.
+- Prompt shows the start month, end month, month count, and per-month value. Confirm fills all months in range; Cancel leaves cells empty.
+- No-op if any month cell in the entry already has a value (avoids overwriting existing work).
+- No modal clash: auto-fill fires at 200ms in the EPSD-changed branch only for new rows; EPSD clear/extend (100ms) is silent for blank rows; budget check (150ms) lives in the EPSD-unchanged branch.
+- Undo (`Ctrl+Z`) reverts the fill in one step.
+- Audit trail entry: "Auto-filled allocations (Xd/mo × N months)".
+
+---
+
 ## [3.16.0] - 2026-04-22
 
 ### Added — #1200: Allocation Solver (Budget vs. EPSD Validation)

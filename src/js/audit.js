@@ -37,6 +37,7 @@ const OP_LABELS = {
   removeLocation:            ['Removed location',      m => m.code],
   clearAllocationsAfterEpsd: ['Cleared allocations',   m => m.project],
   extendAllocationsToEpsd:   ['Extended allocations',  m => m.project],
+  autoFillAllocations:       ['Auto-filled allocations', m => '(' + m.daysPerMonth + 'd/mo × ' + m.months + ' months)'],
 };
 
 /* ── CAPTURE ─────────────────────────────────────────────────── */
