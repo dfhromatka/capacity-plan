@@ -56,9 +56,16 @@ export const Storage = {
     } else if (this.adapter === 'sharepoint') {
       return this._saveRecordToSharePoint(type, record);
     } else if (this.adapter === 'azure') {
-      this._saveRecordToAzure(type, record).catch(err =>
-        showToast(`⚠️ Save failed — ${err.message}`, 5000)
-      );
+      const id = record?.id ?? record?.key ?? 'singleton';
+      _pendingWrites++;
+      _setSaveStatus('saving');
+      this._saveRecordToAzure(type, record)
+        .then(() => { if (--_pendingWrites === 0) _setSaveStatus('saved'); })
+        .catch(() => {
+          _pendingWrites = Math.max(0, _pendingWrites - 1);
+          _enqueue('save', type, id, record);
+          _setSaveStatus('failed');
+        });
     }
   },
 
@@ -68,9 +75,15 @@ export const Storage = {
     } else if (this.adapter === 'sharepoint') {
       return this._deleteRecordFromSharePoint(type, id);
     } else if (this.adapter === 'azure') {
-      this._deleteRecordFromAzure(type, id).catch(err =>
-        showToast(`⚠️ Delete failed — ${err.message}`, 5000)
-      );
+      _pendingWrites++;
+      _setSaveStatus('saving');
+      this._deleteRecordFromAzure(type, id)
+        .then(() => { if (--_pendingWrites === 0) _setSaveStatus('saved'); })
+        .catch(() => {
+          _pendingWrites = Math.max(0, _pendingWrites - 1);
+          _enqueue('delete', type, id, null);
+          _setSaveStatus('failed');
+        });
     }
   },
 
@@ -256,11 +269,82 @@ export const Storage = {
 /* ── AUTO-SAVE HELPER ───────────────────────────────────────── */
 
 let _autoSaveTimeout = null;
+let _pendingWrites   = 0;
+const _writeQueue    = []; // [{ action: 'save'|'delete', type, id, record }]
+
+function _setSaveStatus(status) {
+  const ui = Alpine.store?.('ui');
+  // offline is only cleared by the window 'online' event, not by write results
+  if (ui && ui.saveStatus !== 'offline') ui.saveStatus = status;
+}
+
+function _updatePendingCount() {
+  const ui = Alpine.store?.('ui');
+  if (ui) ui.pendingWriteCount = _writeQueue.length;
+}
+
+const _WQ_KEY = '_capacityPlanWriteQueue';
+
+function _persistQueue() {
+  try {
+    if (_writeQueue.length > 0) localStorage.setItem(_WQ_KEY, JSON.stringify(_writeQueue));
+    else                        localStorage.removeItem(_WQ_KEY);
+  } catch { /* quota or unavailable — queue lives in memory only */ }
+}
+
+function _enqueue(action, type, id, record) {
+  // Replace any existing pending op for the same type+id — latest always wins
+  const idx = _writeQueue.findIndex(op => op.type === type && op.id === id);
+  if (idx !== -1) _writeQueue.splice(idx, 1);
+  _writeQueue.push({ action, type, id, record });
+  _updatePendingCount();
+  _persistQueue();
+}
+
+export function restoreWriteQueue() {
+  try {
+    const raw = localStorage.getItem(_WQ_KEY);
+    if (!raw) return;
+    const ops = JSON.parse(raw);
+    if (Array.isArray(ops) && ops.length > 0) {
+      _writeQueue.push(...ops);
+      _updatePendingCount();
+      _setSaveStatus('failed');
+    }
+  } catch { /* corrupted entry — ignore and start fresh */ }
+}
+
+export async function flushWriteQueue() {
+  if (_writeQueue.length === 0) return;
+  const batch = _writeQueue.splice(0);
+  _updatePendingCount();
+  _setSaveStatus('saving');
+  const failed = [];
+  for (const op of batch) {
+    try {
+      if (op.action === 'save') await Storage._saveRecordToAzure(op.type, op.record);
+      else                      await Storage._deleteRecordFromAzure(op.type, op.id);
+    } catch {
+      failed.push(op);
+    }
+  }
+  if (failed.length > 0) {
+    _writeQueue.unshift(...failed); // preserve order, retry first
+    _updatePendingCount();
+    _persistQueue();
+    _setSaveStatus('failed');
+  } else {
+    _persistQueue();
+    _setSaveStatus(_pendingWrites === 0 ? 'saved' : 'saving');
+  }
+}
 
 export function triggerAutoSave() {
   clearTimeout(_autoSaveTimeout);
+  _setSaveStatus('saving');
   _autoSaveTimeout = setTimeout(() => {
-    Storage.save(_buildSavePayload());
+    const ok = Storage.save(_buildSavePayload());
+    _setSaveStatus(ok ? 'saved' : 'failed');
   }, 500);
 }
 

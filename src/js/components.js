@@ -559,4 +559,28 @@ export function registerComponents(Alpine) {
 
     cancel() { this.editing = false; }
   }));
+
+  // ── SAVE INDICATOR ────────────────────────────────────────
+  Alpine.data('saveIndicator', () => ({
+    get label() {
+      const n = this.$store.ui.pendingWriteCount;
+      const q = n > 0 ? ` (${n})` : '';
+      return {
+        saved:   'Saved',
+        saving:  n > 0 ? `Saving\u2026${q}` : 'Saving\u2026',
+        failed:  `Save failed${q}`,
+        offline: `Offline${q}`,
+      }[this.$store.ui.saveStatus] ?? 'Saved';
+    },
+    get title() {
+      const n = this.$store.ui.pendingWriteCount;
+      const q = n > 0 ? ` ${n} change${n === 1 ? '' : 's'} queued.` : '';
+      return {
+        saved:   'All changes saved',
+        saving:  `Saving changes\u2026${q}`,
+        failed:  `Changes could not be saved \u2014 check your connection.${q}`,
+        offline: `No network connection \u2014 changes will sync when back online.${q}`,
+      }[this.$store.ui.saveStatus] ?? '';
+    },
+  }));
 }

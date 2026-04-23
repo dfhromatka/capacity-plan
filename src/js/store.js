@@ -553,8 +553,11 @@ export function registerStores(Alpine) {
 
   // ── UI STORE — ephemeral UI state that must not trigger data recomputation ──
   Alpine.store('ui', {
-    editingRowId:    null,
-    showKeyboardHelp: false,
+    editingRowId:      null,
+    showKeyboardHelp:  false,
+    saveStatus:        'saved',  // 'saved' | 'saving' | 'failed' | 'offline'
+    currentUser:       null,     // set by resolveCurrentUser() in main.js
+    pendingWriteCount: 0,        // queued writes not yet persisted
   });
 
   // ── MODAL STORE ────────────────────────────────────────────

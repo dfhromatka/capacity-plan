@@ -1102,8 +1102,48 @@ input[type="month"]::-webkit-datetime-edit-year-field {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-2);
+}
+.page-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* ── Save indicator ──────────────────────────────────────── */
+.save-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  transition: color var(--transition-base), opacity var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+}
+.save-indicator--saved   { color: var(--color-text-muted); opacity: 0.5; }
+.save-indicator--saving  { color: var(--color-accent); opacity: 1; }
+.save-indicator--failed  { color: var(--color-danger); opacity: 1; }
+.save-indicator--offline { color: var(--color-warning); opacity: 1; }
+
+.save-indicator__spin {
+  animation: save-spin 0.8s linear infinite;
+}
+@keyframes save-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── User chip ───────────────────────────────────────────── */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  user-select: none;
+  margin-left: var(--space-4);
 }
 
 /* Plan name + gear grouped together; title can grow freely */
