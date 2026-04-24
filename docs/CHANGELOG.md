@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.19.6] - 2026-04-24
+
+### Fixed
+- **JS-05** — `document.querySelectorAll` + `element.style` DOM manipulation for animation restart removed. `filterAnimKey` counter added to `Alpine.store('plan')`; `selectCond` increments it; `buildTableData` stamps matched row keys with the counter so Alpine destroys and recreates those elements, naturally restarting the CSS animation (`src/js/store.js`, `src/js/components.js`)
+- **JS-07** — Three `setTimeout(fn, 100/150/200)` calls in `tableRow.save()` replaced with `this.$nextTick()`. `mutate()` is synchronous so the store is already consistent; `$nextTick` guarantees Alpine has flushed before prompts read from it (`src/js/components.js`)
+
+---
+
 ## [3.19.5] - 2026-04-24
 
 ### Fixed

@@ -161,20 +161,11 @@ export function registerComponents(Alpine) {
     selectCond(val) {
       if (this.isMultiSelect) {
         Alpine.store('plan').toggleFilterCondition(slotIdx, val);
-        // Keep panel open for multi-select; restart filter-match animation
       } else {
         Alpine.store('plan').setFilter(slotIdx, this.field, val);
         this.condOpen = false;
       }
-      // If a row already had row-filter-match the class never leaves, so the CSS
-      // animation doesn't restart. Force-restart it after Alpine re-renders.
-      this.$nextTick(() => {
-        document.querySelectorAll('.row-filter-match > td').forEach(td => {
-          td.style.animation = 'none';
-          void td.offsetWidth; // trigger reflow to reset animation state
-          td.style.animation  = '';
-        });
-      });
+      Alpine.store('plan').filterAnimKey++;
     },
 
     clearSlot() {
@@ -498,19 +489,15 @@ export function registerComponents(Alpine) {
         }, { project: newProject });
       }
       if (newEpsd !== oldEPSD) {
-        setTimeout(() => checkEPSDAllocationPrompt(
-          Alpine.store('plan').entries.find(e => e.id === savedId) || entry,
-          oldEPSD, newEpsd
-        ), 100);
-        if (isNew) {
-          setTimeout(() => checkAutoFillPrompt(
-            Alpine.store('plan').entries.find(e => e.id === savedId) || entry
-          ), 200);
-        }
+        this.$nextTick(() => {
+          const saved = Alpine.store('plan').entries.find(e => e.id === savedId) || entry;
+          checkEPSDAllocationPrompt(saved, oldEPSD, newEpsd);
+          if (isNew) checkAutoFillPrompt(saved);
+        });
       } else {
-        setTimeout(() => checkBudgetAllocationPrompt(
-          Alpine.store('plan').entries.find(e => e.id === savedId) || entry
-        ), 150);
+        this.$nextTick(() => {
+          checkBudgetAllocationPrompt(Alpine.store('plan').entries.find(e => e.id === savedId) || entry);
+        });
       }
     },
 

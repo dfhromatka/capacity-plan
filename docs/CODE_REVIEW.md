@@ -124,21 +124,9 @@ Both tokens now reference `var(--color-primary-border)` and `var(--color-primary
 
 ---
 
-### JS-05 — `document.querySelectorAll` for animation reset inside Alpine 🟡
+### JS-05 — `document.querySelectorAll` for animation reset inside Alpine ✅ Fixed v3.19.6
 
-**File:** `src/js/components.js` (`selectCond`, ~line 148)
-
-```js
-document.querySelectorAll('.row-filter-match > td').forEach(td => {
-  td.style.animation = 'none';
-  void td.offsetWidth;
-  td.style.animation = '';
-});
-```
-
-Direct DOM queries and `element.style` writes inside an Alpine component — forbidden by architecture rules.
-
-**Fix direction:** Add a `filterAnimKey` counter to `$store.plan`. Increment it when a filter condition is selected. Bind it as a `:key` on filter-match rows via `tableData` so Alpine destroys and recreates those elements, restarting the animation naturally.
+`filterAnimKey: 0` counter added to `Alpine.store('plan')`. `selectCond` increments it instead of querying the DOM. `buildTableData` stamps matched rows' keys with the counter (`entry-{id}-{animKey}`), causing Alpine to destroy and recreate those elements and naturally restart the CSS animation.
 
 ---
 
@@ -152,18 +140,9 @@ Direct DOM queries and `element.style` writes inside an Alpine component — for
 
 ---
 
-### JS-07 — `setTimeout` used instead of `$nextTick` for post-save prompts 🟡
+### JS-07 — `setTimeout` used instead of `$nextTick` for post-save prompts ✅ Fixed v3.19.6
 
-**File:** `src/js/components.js` (`tableRow.save`, ~line 476)
-
-```js
-setTimeout(() => checkEPSDAllocationPrompt(...), 100);
-setTimeout(() => checkAutoFillPrompt(...), 200);
-```
-
-Arbitrary millisecond delays are fragile. The intent is to wait until Alpine has re-rendered.
-
-**Fix direction:** Replace with `this.$nextTick(() => { checkEPSDAllocationPrompt(...); })`. Chain the auto-fill check with a second `$nextTick` call.
+All three `setTimeout(fn, N)` calls in `tableRow.save()` replaced with a single `this.$nextTick()` block. `mutate()` is synchronous so the store is already updated; `$nextTick` ensures Alpine has flushed before the prompt reads from the store.
 
 ---
 
@@ -359,9 +338,9 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | CSS-06 | 🟡 Important | `src/css/styles.css` | Hardcoded pixel values (`2px`, `1px 3px`, `3px`) |
 | CSS-07 | ✅ Fixed v3.19.5 | `src/css/design-tokens.css` | focus shadow tokens now use palette token refs |
 | CSS-08 | ✅ Fixed v3.19.5 | `src/settings.html`, `src/css/styles.css` | inline resize → .form-input--resizable class |
-| JS-05 | 🟡 Important | `src/js/components.js` | `document.querySelectorAll` for animation reset |
+| JS-05 | ✅ Fixed v3.19.6 | `src/js/store.js`, `src/js/components.js` | filterAnimKey counter; key churn on matched rows restarts animation |
 | JS-06 | 🟢 Enhancement | `src/js/components.js` | `$el.querySelectorAll` in keyboard nav |
-| JS-07 | 🟡 Important | `src/js/components.js` | `setTimeout` instead of `$nextTick` for post-save prompts |
+| JS-07 | ✅ Fixed v3.19.6 | `src/js/components.js` | setTimeout → $nextTick in tableRow.save() |
 | JS-08 | ✅ Fixed v3.19.5 | `src/js/components.js` | Under allocated label now shows `<` not `>` |
 | JS-09 | ✅ Fixed v3.19.5 | `src/js/audit.js` | updateFixedAllocationDesc now reads m.catId |
 | SEC-01 | ✅ Fixed v3.19.5 | `src/js/main.js` | resp.ok guard added before resp.json() |

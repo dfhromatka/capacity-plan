@@ -152,7 +152,7 @@ function buildTableData(store) {
             }
           }
         }
-        rows.push({ rowType: 'entry', key: 'entry-' + e.id, groupKey: group.key, ...e, ragStatus: e.ragStatus || 'null', epsdDisplay: e.epsd ? formatDateShort(e.epsd) : '—', dayCells, filterMatch });
+        rows.push({ rowType: 'entry', key: filterMatch ? `entry-${e.id}-${store.filterAnimKey}` : 'entry-' + e.id, groupKey: group.key, ...e, ragStatus: e.ragStatus || 'null', epsdDisplay: e.epsd ? formatDateShort(e.epsd) : '—', dayCells, filterMatch });
       });
 
       const totalEntries = byEmp.get(emp.id) ?? [];
@@ -207,6 +207,7 @@ export function registerStores(Alpine) {
       { field: null, condition: null },
     ],
     filterRowsShown: 1,
+    filterAnimKey:   0,
     groupBy:         'None',
     expandedGroups:  {},
     sortColumn:      null,
