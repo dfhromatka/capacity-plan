@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-24 (v3.19.2)
+> **Last updated:** 2026-04-24 (v3.19.3)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -77,34 +77,6 @@ return this._saveRecordToAzure(type, record).then(...).catch(...);
 
 ---
 
-### STOR-06 — `_buildSavePayload` persists transient UI state 🟡
-
-**File:** `src/js/storage.js` (`_buildSavePayload`, ~line 382)
-
-`activeFilters`, `filterRowsShown`, `expandedGroups`, `collapseAllEntries`, `expandedInSummary`, and `showArchived` are all persisted in the `state` blob. These are session-only UI preferences. On Azure each filter change will trigger a `saveRecord('appState', ...)` write, adding unnecessary API traffic and noise to the audit trail.
-
-**Fix direction:** Persist only structurally meaningful state: `nextId`, `nextEmpId`, `viewStartIndex`, `sortColumn`, `sortDirection`, `showAvailCards`. Remove the filter and expand state from `_buildSavePayload` and from `loadFromStorage`'s restore block.
-
----
-
-### STOR-07 — `exportData()` calls `Storage.load()` outside of app init 🟡
-
-**File:** `src/js/settings-page.js` (`exportData`, ~line 354)
-
-```js
-async exportData() {
-  saveToStorage();
-  const data = await Storage.load();
-  if (data) Storage.exportToFile(data);
-}
-```
-
-`Storage.load()` triggers a full `JSON.parse` of the entire dataset (or a full API round-trip on Azure). The intent is to export the freshest data, but `_buildSavePayload()` already builds exactly that shape — no extra round-trip needed.
-
-**Fix direction:** Export `_buildSavePayload` (or add a `Storage.buildPayload()` wrapper) and call `Storage.exportToFile(_buildSavePayload())` directly.
-
----
-
 ### STOR-08 — Keyboard help advertised Ctrl+Z / Ctrl+Y but undo/redo was not implemented ✅ Fixed v3.19.0
 
 Removed both shortcuts from the keyboard help overlay. No handler existed in `keyboard.js` and no undo stack in `history.js`. Deferred undo/redo is tracked separately as #1150.
@@ -118,20 +90,6 @@ Removed both shortcuts from the keyboard help overlay. No handler existed in `ke
 If `flushWriteQueue` is processing (`_writeQueue.splice(0)`) and a new `_enqueue()` call fires during the flush, the new item gets added to `_writeQueue`. If the flush then fails and re-adds failed items, the newly-enqueued item is duplicated. `_writeQueue` is a module-level array mutated in-place.
 
 **Fix direction:** In `flushWriteQueue`, snapshot the queue atomically: `const batch = [..._writeQueue]; _writeQueue.splice(0, batch.length);`. Re-append only the failed items from `batch`, never touching items that arrived after the snapshot.
-
----
-
-### STORAGE-01 — `_buildSavePayload` may overwrite out-of-window allocations with zeros 🟡
-
-**File:** `src/js/storage.js` (`_buildSavePayload`, ~line 376)
-
-```js
-s.months.forEach((m, i) => { allDays[m.key] = e.days[i] || 0; });
-```
-
-`e.days` is a positional array sized for the *current* 36-month window. If an entry was created on an older code version where the window was shorter, `e.days.length < s.months.length`, and `e.days[i]` returns `undefined` for tail months. `undefined || 0` writes `0`, **overwriting previously stored non-zero allocations** for those months on the first save after a version upgrade. This is a data loss vector.
-
-**Fix direction:** Guard: `if (i < e.days.length) allDays[m.key] = e.days[i] || 0;` — only write months within the current array bounds.
 
 ---
 
@@ -459,11 +417,11 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | PERF-06 | 🟡 Important | `src/js/data.js` | `empStats` O(n) fallback in `getGroupStats` |
 | PERF-07 | 🟢 Enhancement | `src/js/store.js` | Redundant `void` dep-touches in `cardData`/`chartData` |
 | STOR-05 | 🔴 Critical | `src/js/storage.js` | `saveRecord`/`deleteRecord` azure branch not returning Promise |
-| STOR-06 | 🟡 Important | `src/js/storage.js` | `_buildSavePayload` persists transient UI state |
-| STOR-07 | 🟡 Important | `src/js/settings-page.js` | `exportData()` calls `Storage.load()` in a click handler |
+| STOR-06 | ✅ Fixed v3.19.3 | `src/js/storage.js`, `src/js/data.js` | `activeFilters` + `filterRowsShown` removed from persisted payload and restore |
+| STOR-07 | ✅ Fixed v3.19.3 | `src/js/storage.js`, `src/js/settings-page.js` | `exportData` now calls `buildSavePayload()` directly; `Storage.load()` round-trip eliminated |
 | STOR-08 | ✅ Fixed v3.19.0 | `src/index.html` | Ctrl+Z/Y removed from keyboard overlay |
 | STOR-09 | 🟢 Enhancement | `src/js/storage.js` | Write queue flush TOCTOU race |
-| STORAGE-01 | 🟡 Important | `src/js/storage.js` | `_buildSavePayload` may zero out-of-window allocations |
+| STORAGE-01 | ✅ Fixed v3.19.3 | `src/js/storage.js` | `buildSavePayload` now guards `i < e.days.length` before writing keyed days |
 | A11Y-05 | 🟡 Important | `src/index.html` | Toggle icons use `<span role="button">` not `<button>` |
 | A11Y-06 | 🟡 Important | `src/index.html` | Sortable `<th>` not keyboard accessible |
 | A11Y-07 | 🟡 Important | `src/index.html` | RAG icon not keyboard accessible |

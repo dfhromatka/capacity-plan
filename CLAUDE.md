@@ -7,9 +7,11 @@
 - When asked to commit, write a meaningful present-tense message describing the change.
 - When a task is experimental or risky, suggest a feature branch proactively — but don't create it without approval.
 - When asked to commit and push, do both in sequence.
-- **At the end of every task, output the exact `git add` command** listing all files changed during that task. Example:
+- **At the end of every task, output the exact `git add` command and a suggested `git commit` message** listing all files changed during that task and all issus addressed. Example:
   ```
   git add src/js/store.js src/js/data.js docs/CHANGELOG.md
+
+  git commit -m "code review critical issues: ARCH-05, ARCH-06, ARCH-07, CSS-05"
   ```
   Do not include files that were already modified before the task started (e.g. pre-existing uncommitted changes).
 

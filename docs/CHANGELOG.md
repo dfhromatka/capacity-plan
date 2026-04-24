@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.19.3] - 2026-04-24
+
+### Fixed
+- **STORAGE-01** — `buildSavePayload` now guards `if (i < e.days.length)` before writing keyed allocation values, preventing silent zero-overwrite of tail months for entries created on an older window size (`src/js/storage.js`)
+- **STOR-06** — `activeFilters` and `filterRowsShown` removed from the persisted state blob and from `loadFromStorage` restore. Filters now always reset to default on page load — no more stale filter state after reload. `expandedGroups`, `groupBy`, `sortColumn`, and `sortDirection` are still persisted. (`src/js/storage.js`, `src/js/data.js`)
+- **STOR-07** — `exportData()` in settings now calls `buildSavePayload()` directly and passes the result to `Storage.exportToFile()` — no `saveToStorage()` + `Storage.load()` round-trip needed. `_buildSavePayload` renamed to `buildSavePayload` and exported. (`src/js/storage.js`, `src/js/settings-page.js`)
+
+---
+
 ## [3.19.2] - 2026-04-24
 
 ### Fixed

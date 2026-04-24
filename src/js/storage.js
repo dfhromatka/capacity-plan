@@ -345,7 +345,7 @@ export function triggerAutoSave() {
   _setSaveStatus('saving');
   _autoSaveTimeout = setTimeout(() => {
     try {
-      const ok = Storage.save(_buildSavePayload());
+      const ok = Storage.save(buildSavePayload());
       _setSaveStatus(ok ? 'saved' : 'failed');
     } catch {
       _setSaveStatus('failed');
@@ -355,7 +355,7 @@ export function triggerAutoSave() {
 
 export function saveToStorage() {
   try {
-    Storage.save(_buildSavePayload());
+    Storage.save(buildSavePayload());
     _setSaveStatus('saved');
   } catch (err) {
     console.error('Save failed:', err);
@@ -363,7 +363,7 @@ export function saveToStorage() {
   }
 }
 
-function _buildSavePayload() {
+export function buildSavePayload() {
   const s = Alpine.store('plan');
   if (!s) return { dataVersion: DATA_VERSION };
   return {
@@ -375,21 +375,21 @@ function _buildSavePayload() {
     entries: s.entries.map(e => {
       // Merge full history with current window so out-of-window allocations are preserved
       const allDays = { ...(e._allDays || {}) };
-      s.months.forEach((m, i) => { allDays[m.key] = e.days[i] || 0; });
+      s.months.forEach((m, i) => {
+        if (i < e.days.length) allDays[m.key] = e.days[i] || 0;
+      });
       const { _allDays, ...rest } = e;
       return { ...rest, days: allDays };
     }),
     state: {
-      nextId:          s.nextId,
-      nextEmpId:       s.nextEmpId,
-      activeFilters:   s.activeFilters,
-      filterRowsShown: s.filterRowsShown,
-      groupBy:         s.groupBy,
-      expandedGroups:  s.expandedGroups,
-      sortColumn:      s.sortColumn,
-      sortDirection:   s.sortDirection,
-      viewStartIndex:  s.viewStartIndex,
-      showAvailCards:  s.showAvailCards,
+      nextId:         s.nextId,
+      nextEmpId:      s.nextEmpId,
+      groupBy:        s.groupBy,
+      expandedGroups: s.expandedGroups,
+      sortColumn:     s.sortColumn,
+      sortDirection:  s.sortDirection,
+      viewStartIndex: s.viewStartIndex,
+      showAvailCards: s.showAvailCards,
     },
     auditLog: getAuditLog(),
   };

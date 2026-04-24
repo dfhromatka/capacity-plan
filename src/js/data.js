@@ -231,15 +231,13 @@ export async function loadFromStorage() {
     }
 
     if (stored.state) {
-      if (stored.state.nextId !== undefined)             s.nextId              = stored.state.nextId;
-      if (stored.state.nextEmpId !== undefined)          s.nextEmpId           = stored.state.nextEmpId;
-      if (stored.state.activeFilters !== undefined)      s.activeFilters       = stored.state.activeFilters;
-      if (stored.state.filterRowsShown !== undefined)    s.filterRowsShown     = stored.state.filterRowsShown;
-      if (stored.state.groupBy !== undefined)            s.groupBy             = stored.state.groupBy;
-      if (stored.state.expandedGroups !== undefined)     s.expandedGroups      = stored.state.expandedGroups;
-      if (stored.state.sortColumn !== undefined)         s.sortColumn          = stored.state.sortColumn;
-      if (stored.state.sortDirection !== undefined)      s.sortDirection       = stored.state.sortDirection;
-      if (stored.state.showAvailCards !== undefined)     s.showAvailCards      = stored.state.showAvailCards;
+      if (stored.state.nextId !== undefined)         s.nextId          = stored.state.nextId;
+      if (stored.state.nextEmpId !== undefined)      s.nextEmpId       = stored.state.nextEmpId;
+      if (stored.state.groupBy !== undefined)        s.groupBy         = stored.state.groupBy;
+      if (stored.state.expandedGroups !== undefined) s.expandedGroups  = stored.state.expandedGroups;
+      if (stored.state.sortColumn !== undefined)     s.sortColumn      = stored.state.sortColumn;
+      if (stored.state.sortDirection !== undefined)  s.sortDirection   = stored.state.sortDirection;
+      if (stored.state.showAvailCards !== undefined) s.showAvailCards  = stored.state.showAvailCards;
     }
     if (Array.isArray(stored.auditLog)) initAuditLog(stored.auditLog);
     console.log(`Data loaded from storage (v${stored.dataVersion})`);

@@ -4,7 +4,7 @@ import Alpine from 'alpinejs';
 import { state } from './data.js';
 import { mutate } from './history.js';
 import { getAuditLog, clearAuditLog } from './audit.js';
-import { triggerAutoSave, Storage, saveToStorage } from './storage.js';
+import { triggerAutoSave, Storage, saveToStorage, buildSavePayload } from './storage.js';
 import {
   exportEmployeesCsv, exportEntriesCsv,
   parseCapacityPlanCsv,
@@ -353,10 +353,8 @@ export function settingsPage() {
     },
 
     /* ── DATA IMPORT / EXPORT ─────────────────────────────────── */
-    async exportData() {
-      saveToStorage();
-      const data = await Storage.load();
-      if (data) Storage.exportToFile(data);
+    exportData() {
+      Storage.exportToFile(buildSavePayload());
     },
 
     importData(event) {
