@@ -20,6 +20,7 @@ and builds via Vite. The root-level JS/HTML files are legacy and no longer maint
 - **ES modules** — `import`/`export` throughout `src/`
 - **Browser `localStorage`** — persistence, abstracted via `src/js/storage.js`
 - **Plain HTML5 / CSS3** — no framework, no Tailwind
+- **stylelint** — CSS linter (`npm run lint:css`); config in `.stylelintrc.json`; enforces `var(--...)` for colour and typography properties
 
 ---
 

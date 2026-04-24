@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint:css": "stylelint src/css/styles.css"
   },
   "dependencies": {
     "alpinejs": "^3.14.8",
@@ -15,6 +16,8 @@
     "country-flag-emoji-polyfill": "^0.1.8"
   },
   "devDependencies": {
+    "stylelint": "^17.9.0",
+    "stylelint-declaration-strict-value": "^1.11.1",
     "vite": "^5.4.0"
   }
 }

@@ -83,17 +83,14 @@
   --color-transparent: transparent;
   
   /* Background Colors */
-  --color-bg-hover: #f9fafb;          /* Hover backgrounds */
   --color-bg-modal: rgba(0, 0, 0, 0.45); /* Modal overlay */
-  
+
   /* Row Type Colors */
-  --color-row-emp: #eff6ff;           /* Employee header row */
-  --color-row-emp-border: #3b82f6;
   --color-row-oh: #fafafa;            /* Fixed allocation rows */
   --color-row-project: #f0f7ff;       /* Project rows */
   --color-row-other: #f9fafb;         /* Other type rows */
-  --color-row-absence: #fffbeb;       /* Absence rows */
   --color-row-sub: #f8fafc;           /* Subtotal rows */
+  /* Note: employee header rows use --color-primary-bg; absence rows use --color-warning-pale */
   --color-info-col-bg: var(--color-gray-50); /* Header tint for info (non-month) columns */
   
   /* ─────────────────────────────────────────────────────────────
@@ -139,6 +136,7 @@
      ───────────────────────────────────────────────────────────── */
   
   --space-0: 0;
+  --space-half: 2px;               /* half-unit — tight inline control vertical padding */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -195,9 +193,8 @@
   --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.12); /* Dropdown / floating panel */
   
   /* Focus Shadows */
-  --shadow-focus-primary: 0 0 0 3px var(--color-primary-border);
   --shadow-focus-blue: 0 0 0 3px var(--color-primary-border);
-  --shadow-focus-danger: 0 0 0 3px #fca5a5;
+  --shadow-focus-danger: 0 0 0 3px var(--color-danger-light);
   --shadow-focus-input: 0 0 0 3px var(--color-primary-bg-active);
   
   /* ─────────────────────────────────────────────────────────────
@@ -206,11 +203,10 @@
   
   --transition-fast: 0.1s;
   --transition-base: 0.2s;
-  --transition-slow: 0.3s;
-  
-  --transition-all: all 0.2s ease;
-  --transition-colors: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-  --transition-transform: transform 0.2s ease;
+
+  --transition-all: all var(--transition-base) ease;
+  --transition-colors: color var(--transition-base) ease, background-color var(--transition-base) ease, border-color var(--transition-base) ease;
+  --transition-transform: transform var(--transition-base) ease;
   
   /* ─────────────────────────────────────────────────────────────
      COMPONENT-SPECIFIC
@@ -258,16 +254,15 @@
   --color-surface-alt:   var(--color-gray-50);           /* #f8fafc — alternate surface */
   --color-border:        var(--color-gray-200);          /* #e2e8f0 — default divider */
   --color-text-primary:  var(--color-gray-900);          /* #111827 — primary text */
-  --color-text-muted:    var(--color-gray-neutral-500);  /* #6b7280 — muted/label text */
+  --color-text-muted:    var(--color-gray-neutral-500);  /* #6b7280 — muted/secondary/label text */
   --color-text-inverse:  var(--color-white);             /* #ffffff — text on dark bg */
-  --color-text-secondary: var(--color-gray-neutral-500); /* #6b7280 — secondary/supporting text */
   --color-surface-raised: var(--color-gray-neutral-50);  /* #fafafa — elevated panel/card bg */
 
-  /* Font sizes — BEM system */
+  /* Font sizes — BEM system (aliases for --text-* scale)
+     Note: --font-size-xs = 10px (--text-sm), not the absolute smallest (--text-xs = 9px) */
   --font-size-xs: var(--text-sm);    /* 10px — small labels, btn--sm */
   --font-size-sm: var(--text-md);    /* 12px — secondary text, .btn base */
   --font-size-md: var(--text-xl);    /* 14px — modal titles, primary body */
-  --font-size-base: var(--text-md);  /* 12px — base body size (alias for --text-md) */
 
   /* Duration — BEM system */
   --duration-fast: var(--transition-fast);       /* 0.1s */

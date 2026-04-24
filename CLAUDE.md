@@ -80,6 +80,7 @@ Before starting any work, read **`docs/CODE_REVIEW.md`** for the current list of
 - **ES modules** — `import`/`export` throughout `src/`
 - **Browser `localStorage`** — persistence via `src/js/storage.js`
 - **Plain HTML5 / CSS3** — no framework, no Tailwind
+- **stylelint** — CSS linter (`npm run lint:css`); config in `.stylelintrc.json`
 
 ---
 
@@ -338,18 +339,18 @@ This rule applies to JS layout decisions too: read dimensions from the DOM or de
 ### Token rules
 
 - **ALL** colour values → `var(--color-*)` — never write raw hex, `rgb()`, or `rgba()`
-- **ALL** spacing → `var(--spacing-*)` — never write raw `px` values
+- **ALL** spacing → `var(--space-*)` — never write raw `px` values
 - **ALL** typography → `var(--font-*)` tokens
-- Z-index → `var(--z-*)`, transitions → `var(--duration-*)` + `var(--easing-*)`
+- Z-index → `var(--z-*)`, transitions → `var(--transition-*)` or `var(--duration-*)`
 - Adding a new design decision → **add the token first**, then use it
 
 ### Token prefix reference
 
 | Prefix | Examples |
 |--------|---------|
-| `--color-*` | `--color-accent`, `--color-surface`, `--color-text-primary` |
-| `--spacing-*` | `--spacing-xs`, `--spacing-sm`, `--spacing-md` |
-| `--font-*` | `--font-size-sm`, `--font-weight-medium` |
+| `--color-*` | `--color-primary`, `--color-surface`, `--color-text-primary` |
+| `--space-*` | `--space-1`, `--space-2`, `--space-3` |
+| `--font-*` | `--font-size-sm`, `--font-medium` |
 | `--radius-*` | `--radius-sm`, `--radius-md` |
 | `--shadow-*` | `--shadow-sm`, `--shadow-md` |
 | `--z-*` | `--z-modal`, `--z-toast` |
@@ -390,7 +391,8 @@ Every button, link, input, select, and clickable element must have:
 
 Before editing CSS: grep `src/css/design-tokens.css` for existing tokens and `src/css/styles.css` for existing classes — do not add a token or class that already exists.  
 After adding tokens: update the relevant table in `docs/DESIGN_SYSTEM.md`.  
-After adding component classes: no doc update needed — `styles.css` is the source of truth.
+After adding component classes: no doc update needed — `styles.css` is the source of truth.  
+After any CSS edit: run `npm run lint:css` to verify no raw colour or font values were introduced. The linter enforces `var(--...)` for `color`, `background-color`, `border-color`, `outline-color`, `font-size`, and `font-weight`.
 
 ---
 

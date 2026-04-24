@@ -47,6 +47,42 @@ Two `.filter()` passes per employee per month bar (once for `'Project'`, once fo
 
 ---
 
+---
+
+### CSS-09 — `.table-card` missing `overflow: hidden`; inner content bleeds rounded corners ✅ Fixed v3.19.7
+
+**File:** `src/css/styles.css` (`.table-card`, line 31)
+
+`.table-card` has `border-radius: var(--radius-xl)` but no `overflow: hidden`. The table's sticky `<thead>` and the chart's `<div>` bars render with square corners that visibly protrude past the card's rounded border in the corners.
+
+**Fix:** `overflow: hidden` added to `.table-card`.
+
+---
+
+### CSS-10 — Table CSS split across two distant blocks in `styles.css` ✅ Fixed v3.19.9
+
+**File:** `src/css/styles.css`
+
+~88 lines of table/editing CSS that had accumulated at the end of the file (`.row-editing`, `.cell-inactive`, `.row-group`, employee header, fixed-alloc rows, entry editing inputs, legend) consolidated into a single contiguous `TABLE: ROW EDITING & INLINE CONTROLS` section immediately following the main table block. `--border-medium` token substituted for `1.5px solid`. `--space-half: 2px` token added to `design-tokens.css`; all 6 `padding: 2px ...` rules in the block updated to use it. Remaining 3px/6px/10px values kept as-is (no clean token match; spacing micro-values are a judgment call per CSS-06).
+
+---
+
+### CSS-11 — `stylelint` not configured; raw hex/px values reach production silently ✅ Fixed v3.19.9
+
+**File:** `package.json` / `.stylelintrc.json`
+
+`stylelint` + `stylelint-declaration-strict-value` added as devDependencies. `.stylelintrc.json` configured to enforce `var(--...)` for `color`, `background-color`, `border-color`, `outline-color`, `font-size`, and `font-weight`. Pre-existing rem-based font sizes in icon classes (`1.25rem`, `1rem`, `1.1rem`, `0.8rem`) migrated to nearest `--text-*` tokens. Undefined `--color-accent` token replaced with `var(--color-primary)`. `drop-shadow(rgba())` false positives suppressed with inline `stylelint-disable-line`. `npm run lint:css` script added to `package.json`.
+
+---
+
+### CSS-12 — Duplicate and unused tokens in `design-tokens.css` ✅ Fixed v3.19.8
+
+**File:** `src/css/design-tokens.css`
+
+8 tokens removed: `--color-bg-hover` (= `--color-gray-bg`), `--color-row-emp` (= `--color-primary-bg`), `--color-row-emp-border` (= `--color-primary-light`), `--color-row-absence` (= `--color-warning-pale`), `--shadow-focus-primary` (unused), `--color-text-secondary` (= `--color-text-muted`), `--font-size-base` (= `--font-size-sm`), `--transition-slow` (unused). 16 references in `styles.css` updated to canonical equivalents. `--shadow-focus-danger` raw hex → `var(--color-danger-light)`. Transition shorthands reference `--transition-base` instead of hardcoded `0.2s`. CLAUDE.md spacing prefix corrected (`--spacing-*` → `--space-*`).
+
+---
+
 ### STOR-05 — `saveRecord` / `deleteRecord` azure branch does not return its Promise 🔴
 
 **File:** `src/js/storage.js` (`saveRecord` ~line 62, `deleteRecord` ~line 80)
@@ -104,11 +140,18 @@ All 6 tab buttons now have `id="tab-{name}"` and `aria-controls="panel-{name}"`.
 
 **File:** `src/css/styles.css`
 
+Remaining after CSS-10 pass (v3.19.9):
 - `.col-del > div`: `gap: 2px` (~line 168)
 - `.month-nav__btn`: `padding: 1px 3px` (~line 186)
 - `.mth-bar`: `height: 3px` (~line 364)
+- `.oh-desc-input`: `padding: var(--space-1) 6px`
+- `.addrow-sticky-cell`: `padding: 6px var(--space-2)`
+- `.btn-add-entry`: `padding: 3px var(--space-3)`
+- `.entry-proj-edit-row`: `gap: 3px`; `.entry-url-row`: `gap: 3px`, `margin-top: 3px`
+- `.row-group__cell`: `padding: 10px var(--space-3)` — no clean `--space-*` token for 10px
+- `.legend-avail-swatch`: `width: 10px; height: 10px; margin-right: 3px`
 
-**Fix direction:** Add tokens (`--gap-tight`, etc.) or use the nearest existing spacing token.
+**Note:** 3px/6px/10px micro-values have no clean token match on the 4px scale. `gap: 2px` etc. are layout constraints. Fixing these requires either accepting approximate tokens or extending the spacing scale. Low priority given stylelint does not enforce spacing properties.
 
 ---
 
@@ -335,7 +378,11 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | A11Y-07 | ✅ Fixed v3.19.5 | `src/index.html` | RAG div→button with aria-label |
 | A11Y-08 | ✅ Fixed v3.19.5 | `src/settings.html` | aria-controls + role=tabpanel wired for all 6 tabs |
 | CSS-05 | ✅ Fixed v3.19.1 | `src/js/store.js` | `utilColor` now uses `var(--color-danger/warning/success)` |
-| CSS-06 | 🟡 Important | `src/css/styles.css` | Hardcoded pixel values (`2px`, `1px 3px`, `3px`) |
+| CSS-06 | 🟡 Important | `src/css/styles.css` | Hardcoded pixel values — 2px fixes done v3.19.9; 3px/6px/10px remain (no clean token) |
+| CSS-09 | ✅ Fixed v3.19.7 | `src/css/styles.css` | `overflow: hidden` added to `.table-card`; corner bleed fixed |
+| CSS-10 | ✅ Fixed v3.19.9 | `src/css/styles.css` | Scattered table block consolidated; `--space-half` + `--border-medium` applied |
+| CSS-11 | ✅ Fixed v3.19.9 | `package.json`, `.stylelintrc.json` | stylelint + declaration-strict-value configured; `npm run lint:css` passes clean |
+| CSS-12 | ✅ Fixed v3.19.8 | `src/css/design-tokens.css` | 8 duplicate/unused tokens removed; raw hex and hardcoded transitions fixed |
 | CSS-07 | ✅ Fixed v3.19.5 | `src/css/design-tokens.css` | focus shadow tokens now use palette token refs |
 | CSS-08 | ✅ Fixed v3.19.5 | `src/settings.html`, `src/css/styles.css` | inline resize → .form-input--resizable class |
 | JS-05 | ✅ Fixed v3.19.6 | `src/js/store.js`, `src/js/components.js` | filterAnimKey counter; key churn on matched rows restarts animation |

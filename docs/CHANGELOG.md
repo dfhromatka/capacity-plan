@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.19.9] - 2026-04-24
+
+### Added
+- **CSS-11** — `stylelint` + `stylelint-declaration-strict-value` added as devDependencies; `.stylelintrc.json` configured to enforce `var(--...)` for colour and typography properties; `npm run lint:css` script added (`package.json`, `.stylelintrc.json`)
+
+### Refactor
+- **CSS-10** — ~88 lines of table/editing CSS consolidated from end-of-file into a single `TABLE: ROW EDITING & INLINE CONTROLS` section immediately after the main table block (`src/css/styles.css`)
+- **CSS-06 (partial)** — `--space-half: 2px` token added to `design-tokens.css`; 6 `padding: 2px` rules in the editing block updated to use it; `1.5px` border replaced with `var(--border-medium)`; rem-based icon font sizes migrated to `--text-*` tokens; undefined `--color-accent` fixed to `var(--color-primary)` (`src/css/design-tokens.css`, `src/css/styles.css`)
+
+---
+
+## [3.19.8] - 2026-04-24
+
+### Refactor
+- **CSS-12** — Token consolidation in `design-tokens.css`: 8 duplicate/unused tokens removed (`--color-bg-hover`, `--color-row-emp`, `--color-row-emp-border`, `--color-row-absence`, `--shadow-focus-primary`, `--color-text-secondary`, `--font-size-base`, `--transition-slow`); 16 references in `styles.css` migrated to canonical equivalents. `--shadow-focus-danger` raw hex replaced with `var(--color-danger-light)`. Transition shorthands now reference `--transition-base`. CLAUDE.md spacing prefix corrected to `--space-*` (`src/css/design-tokens.css`, `src/css/styles.css`, `CLAUDE.md`)
+
+---
+
+## [3.19.7] - 2026-04-24
+
+### Fixed
+- **CSS-09** — `overflow: hidden` added to `.table-card`; content no longer bleeds past rounded border corners (`src/css/styles.css`)
+
+---
+
 ## [3.19.6] - 2026-04-24
 
 ### Fixed

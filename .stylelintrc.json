@@ -1,0 +1,22 @@
+{
+  "plugins": ["stylelint-declaration-strict-value"],
+  "ignoreFiles": ["src/css/design-tokens.css"],
+  "rules": {
+    "scale-unlimited/declaration-strict-value": [
+      [
+        "color",
+        "background-color",
+        "border-color",
+        "outline-color",
+        "font-size",
+        "font-weight"
+      ],
+      {
+        "ignoreKeywords": {
+          "": ["none", "inherit", "transparent", "currentColor", "initial", "unset"]
+        },
+        "message": "Use a design token var(--...) instead of a hardcoded value"
+      }
+    ]
+  }
+}
