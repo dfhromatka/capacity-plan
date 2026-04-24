@@ -196,9 +196,9 @@
   
   /* Focus Shadows */
   --shadow-focus-primary: 0 0 0 3px var(--color-primary-border);
-  --shadow-focus-blue: 0 0 0 3px #bfdbfe;
+  --shadow-focus-blue: 0 0 0 3px var(--color-primary-border);
   --shadow-focus-danger: 0 0 0 3px #fca5a5;
-  --shadow-focus-input: 0 0 0 3px #dbeafe;
+  --shadow-focus-input: 0 0 0 3px var(--color-primary-bg-active);
   
   /* ─────────────────────────────────────────────────────────────
      TRANSITIONS

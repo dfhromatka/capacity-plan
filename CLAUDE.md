@@ -4,7 +4,7 @@
 
 - **Never commit unless explicitly asked.** The user decides when work is done.
 - **Never create or switch branches unless explicitly asked.**
-- When asked to commit, write a short single-line present-tense message — one sentence covering the "why", issue IDs in parentheses at the end. No body, no bullets.
+- When asked to commit, write a short single-line present-tense message — one sentence covering the "what", issue IDs in parentheses at the end. No body, no bullets.
 - When a task is experimental or risky, suggest a feature branch proactively — but don't create it without approval.
 - When asked to commit and push, do both in sequence.
 - **At the end of every task, run `git status --short` then output a `git add` command and a suggested `git commit` message** covering all issues addressed:
@@ -13,7 +13,7 @@
   ```
   git add src/js/store.js src/js/data.js docs/CHANGELOG.md
 
-  git commit -m "code review critical issues: ARCH-05, ARCH-06, ARCH-07, CSS-05"
+  git commit -m "performance: eliminate redundant filter passes and double reactive flushes (PERF-05, PERF-06, PERF-07)"
   ```
 
 ---

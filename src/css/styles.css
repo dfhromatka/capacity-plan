@@ -1059,6 +1059,7 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 .form-date-pair .form-select { flex: 1; }
 
 .form-input--narrow { max-width: 100px; }
+.form-input--resizable { resize: vertical; }
 
 /* ─────────────────────────────────────────────────────────────
    MONTH CARD TEXT  (Alpine v2.1+)
@@ -1294,6 +1295,7 @@ input[type="month"]::-webkit-datetime-edit-year-field {
 .filter-icon:hover { opacity: 1; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25)); }
 .filter-icon--active { opacity: 1; }
 .filter-icon--lg { font-size: 0.8rem; }
+.btn-icon { background: none; border: none; padding: 0; cursor: pointer; line-height: 1; }
 
 /* ── FILTER ROWS (hierarchical field/condition pairs) ─────── */
 

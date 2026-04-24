@@ -13,6 +13,7 @@ registerComponents(Alpine);
 async function resolveCurrentUser() {
   try {
     const resp = await fetch('/.auth/me');
+    if (!resp.ok) return;
     const { clientPrincipal } = await resp.json();
     if (clientPrincipal) {
       Storage.setCurrentUser(clientPrincipal.userDetails);

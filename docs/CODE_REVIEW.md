@@ -76,47 +76,27 @@ If `flushWriteQueue` is processing (`_writeQueue.splice(0)`) and a new `_enqueue
 
 ---
 
-### A11Y-05 — Toggle icons use `<span role="button">` instead of `<button>` 🟡
+### A11Y-05 — Toggle icons use `<span role="button">` instead of `<button>` ✅ Fixed v3.19.5
 
-**File:** `src/index.html` (sidebar filter icons, ~line 227)
-
-The ∑/≡ collapse toggle and the 📦 archive toggle use `<span role="button" tabindex="0">`. `.filter-icon` has no `:focus-visible` rule. Native `<button>` is required by the Alpine-first rule for interactive controls.
-
-**Fix direction:** Replace both `<span role="button">` elements with `<button>` elements. Add `:focus-visible` styling.
+Both ∑/≡ and 📦 toggles replaced with `<button class="filter-icon btn-icon">`. Redundant `@keydown.enter/space` handlers removed (native button handles these). `aria-pressed` retained. `.btn-icon` reset rule added to `styles.css`.
 
 ---
 
-### A11Y-06 — Sortable `<th>` elements not keyboard accessible 🟡
+### A11Y-06 — Sortable `<th>` elements not keyboard accessible ✅ Fixed v3.19.5
 
-**File:** `src/index.html` (table header row, ~line 363)
-
-Sortable column headers use `@click` on `<th>` elements with no `tabindex` and no `@keydown.enter` handler. Keyboard users cannot sort.
-
-**Fix direction:** Add `tabindex="0"` and `@keydown.enter.prevent="$store.plan.toggleSort('...')"` to each sortable `<th>`, or wrap the label in a `<button>`.
+Added `tabindex="0"` and `@keydown.enter.prevent` to all four sortable `<th>` elements (empName, project, status, epsd).
 
 ---
 
-### A11Y-07 — RAG icon is not keyboard accessible 🟡
+### A11Y-07 — RAG icon is not keyboard accessible ✅ Fixed v3.19.5
 
-**File:** `src/index.html` (RAG cell, ~line 559)
-
-```html
-<div x-show="row.type === 'Project'" @click.stop="$store.plan.cycleRAG(row.id)" class="rag-icon">
-```
-
-Interactive `<div>` with no `role`, no `tabindex`, no keyboard handler, and no `aria-label` describing current state.
-
-**Fix direction:** Replace with `<button>`, add `aria-label` bound to the current RAG value.
+`<div>` replaced with `<button class="rag-icon btn-icon">`. `:aria-label` bound to current RAG state.
 
 ---
 
-### A11Y-08 — Settings tabs missing `aria-controls` / `role="tabpanel"` 🟢
+### A11Y-08 — Settings tabs missing `aria-controls` / `role="tabpanel"` ✅ Fixed v3.19.5
 
-**File:** `src/settings.html` (tabs, ~line 20)
-
-Each `<button role="tab">` sets `:aria-selected` but has no `aria-controls` pointing to a panel. No panel has `role="tabpanel"`. Screen readers cannot navigate the tab–panel relationship.
-
-**Fix direction:** Add `id` attributes to each panel's `x-show` div. Add `aria-controls="panel-id"` to each tab button. Add `role="tabpanel"` and `tabindex="0"` to each panel.
+All 6 tab buttons now have `id="tab-{name}"` and `aria-controls="panel-{name}"`. All 6 panel divs now have matching `id`, `role="tabpanel"`, `tabindex="0"`, and `aria-labelledby`.
 
 ---
 
@@ -132,24 +112,15 @@ Each `<button role="tab">` sets `:aria-selected` but has no `aria-controls` poin
 
 ---
 
-### CSS-07 — `--shadow-focus-blue` / `--shadow-focus-input` use raw hex instead of palette tokens 🟢
+### CSS-07 — `--shadow-focus-blue` / `--shadow-focus-input` use raw hex instead of palette tokens ✅ Fixed v3.19.5
 
-**File:** `src/css/design-tokens.css` (~line 199)
-
-```css
---shadow-focus-blue: 0 0 0 3px #bfdbfe;    /* should be var(--color-primary-border) */
---shadow-focus-input: 0 0 0 3px #dbeafe;   /* should be var(--color-primary-bg-active) */
-```
-
-**Fix direction:** Replace raw hex with palette token references. Consider consolidating into a single `--shadow-focus` token.
+Both tokens now reference `var(--color-primary-border)` and `var(--color-primary-bg-active)` respectively — the identical hex values, now sourced from the token system.
 
 ---
 
-### CSS-08 — Inline `style="resize:vertical"` on settings textarea 🟢
+### CSS-08 — Inline `style="resize:vertical"` on settings textarea ✅ Fixed v3.19.5
 
-**File:** `src/settings.html` (~line 73)
-
-**Fix direction:** Add `.form-input--resizable { resize: vertical; }` to `styles.css` and apply the class.
+`.form-input--resizable { resize: vertical; }` added to `styles.css`. Class applied to the textarea; inline style removed.
 
 ---
 
@@ -196,46 +167,21 @@ Arbitrary millisecond delays are fragile. The intent is to wait until Alpine has
 
 ---
 
-### JS-08 — `project_pct: 'under'` condition label copy error 🟢
+### JS-08 — `project_pct: 'under'` condition label copy error ✅ Fixed v3.19.5
 
-**File:** `src/js/components.js` (`filterRow.condOpts`, ~line 120)
-
-```js
-{ value: 'under', label: `Under allocated (>${pct}%)` },
-```
-
-Label reads `>` but should read `<` — user-visible display bug. Filter logic is correct.
-
-**Fix direction:** `Under allocated (<${pct}%)`.
+Label changed from `Under allocated (>${pct}%)` to `Under allocated (<${pct}%)`.
 
 ---
 
-### JS-09 — Audit `updateFixedAllocationDesc` reads non-existent meta field 🟢
+### JS-09 — Audit `updateFixedAllocationDesc` reads non-existent meta field ✅ Fixed v3.19.5
 
-**File:** `src/js/audit.js` (~line 35)
-
-```js
-updateFixedAllocationDesc: ['Updated description', m => m.descField],
-```
-
-`mutate()` is called with `{ empId, catId, value }` — no `descField` key. Audit entry detail is always `undefined`.
-
-**Fix direction:** Change to `m => m.catId`.
+Changed from `m => m.descField` to `m => m.catId`.
 
 ---
 
-### SEC-01 — `resolveCurrentUser()` does not check `resp.ok` before parsing 🟡
+### SEC-01 — `resolveCurrentUser()` does not check `resp.ok` before parsing ✅ Fixed v3.19.5
 
-**File:** `src/js/main.js` (`resolveCurrentUser`, ~line 16)
-
-```js
-const resp = await fetch('/.auth/me');
-const { clientPrincipal } = await resp.json();
-```
-
-If `/.auth/me` returns a non-200, `resp.json()` may throw on an HTML error body or silently destructure a different shape.
-
-**Fix direction:** Add `if (!resp.ok) return;` before `resp.json()`.
+Added `if (!resp.ok) return;` before `resp.json()`.
 
 ---
 
@@ -405,20 +351,20 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | STOR-08 | ✅ Fixed v3.19.0 | `src/index.html` | Ctrl+Z/Y removed from keyboard overlay |
 | STOR-09 | 🟢 Enhancement | `src/js/storage.js` | Write queue flush TOCTOU race |
 | STORAGE-01 | ✅ Fixed v3.19.3 | `src/js/storage.js` | `buildSavePayload` now guards `i < e.days.length` before writing keyed days |
-| A11Y-05 | 🟡 Important | `src/index.html` | Toggle icons use `<span role="button">` not `<button>` |
-| A11Y-06 | 🟡 Important | `src/index.html` | Sortable `<th>` not keyboard accessible |
-| A11Y-07 | 🟡 Important | `src/index.html` | RAG icon not keyboard accessible |
-| A11Y-08 | 🟢 Enhancement | `src/settings.html` | Tabs missing `aria-controls` / `role="tabpanel"` |
+| A11Y-05 | ✅ Fixed v3.19.5 | `src/index.html`, `src/css/styles.css` | span→button; .btn-icon reset added |
+| A11Y-06 | ✅ Fixed v3.19.5 | `src/index.html` | tabindex + keydown.enter on sortable th |
+| A11Y-07 | ✅ Fixed v3.19.5 | `src/index.html` | RAG div→button with aria-label |
+| A11Y-08 | ✅ Fixed v3.19.5 | `src/settings.html` | aria-controls + role=tabpanel wired for all 6 tabs |
 | CSS-05 | ✅ Fixed v3.19.1 | `src/js/store.js` | `utilColor` now uses `var(--color-danger/warning/success)` |
 | CSS-06 | 🟡 Important | `src/css/styles.css` | Hardcoded pixel values (`2px`, `1px 3px`, `3px`) |
-| CSS-07 | 🟢 Enhancement | `src/css/design-tokens.css` | Focus shadow tokens use raw hex |
-| CSS-08 | 🟢 Enhancement | `src/settings.html` | Inline `style="resize:vertical"` |
+| CSS-07 | ✅ Fixed v3.19.5 | `src/css/design-tokens.css` | focus shadow tokens now use palette token refs |
+| CSS-08 | ✅ Fixed v3.19.5 | `src/settings.html`, `src/css/styles.css` | inline resize → .form-input--resizable class |
 | JS-05 | 🟡 Important | `src/js/components.js` | `document.querySelectorAll` for animation reset |
 | JS-06 | 🟢 Enhancement | `src/js/components.js` | `$el.querySelectorAll` in keyboard nav |
 | JS-07 | 🟡 Important | `src/js/components.js` | `setTimeout` instead of `$nextTick` for post-save prompts |
-| JS-08 | 🟢 Enhancement | `src/js/components.js` | `project_pct 'under'` label shows `>` instead of `<` |
-| JS-09 | 🟢 Enhancement | `src/js/audit.js` | `updateFixedAllocationDesc` reads non-existent `m.descField` |
-| SEC-01 | 🟡 Important | `src/js/main.js` | `resolveCurrentUser` missing `resp.ok` check |
+| JS-08 | ✅ Fixed v3.19.5 | `src/js/components.js` | Under allocated label now shows `<` not `>` |
+| JS-09 | ✅ Fixed v3.19.5 | `src/js/audit.js` | updateFixedAllocationDesc now reads m.catId |
+| SEC-01 | ✅ Fixed v3.19.5 | `src/js/main.js` | resp.ok guard added before resp.json() |
 | SEC-02 | 🟡 Important | `src/js/storage.js` | `type` not encoded in Azure fetch URL |
 | SEC-03 | 🟢 Enhancement | `src/index.html` | `javascript:` URL not blocked in project link href |
 | AZURE-01 | 🔴 Critical | `src/js/history.js`, `src/js/storage.js` | `mutate()` synchronous — cannot await Azure saves |

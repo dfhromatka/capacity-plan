@@ -18,40 +18,40 @@
 
   <!-- Tabs -->
   <div class="settings-tabs" role="tablist" aria-label="Settings sections">
-    <button class="settings-tab" :class="{'active': currentTab === 'plan-settings'}"
+    <button id="tab-plan-settings" class="settings-tab" :class="{'active': currentTab === 'plan-settings'}"
       @click="switchTab('plan-settings')" role="tab"
-      :aria-selected="currentTab === 'plan-settings'" title="Plan Settings (← →)">
+      :aria-selected="currentTab === 'plan-settings'" aria-controls="panel-plan-settings" title="Plan Settings (← →)">
       Plan Settings
     </button>
-    <button class="settings-tab" :class="{'active': currentTab === 'employees'}"
+    <button id="tab-employees" class="settings-tab" :class="{'active': currentTab === 'employees'}"
       @click="switchTab('employees')" role="tab"
-      :aria-selected="currentTab === 'employees'" title="Employees (← →)">
+      :aria-selected="currentTab === 'employees'" aria-controls="panel-employees" title="Employees (← →)">
       Employees
     </button>
-    <button class="settings-tab" :class="{'active': currentTab === 'fixed-commitments'}"
+    <button id="tab-fixed-commitments" class="settings-tab" :class="{'active': currentTab === 'fixed-commitments'}"
       @click="switchTab('fixed-commitments')" role="tab"
-      :aria-selected="currentTab === 'fixed-commitments'" title="Fixed Allocation (← →)">
+      :aria-selected="currentTab === 'fixed-commitments'" aria-controls="panel-fixed-commitments" title="Fixed Allocation (← →)">
       Fixed Allocation
     </button>
-    <button class="settings-tab" :class="{'active': currentTab === 'calendar'}"
+    <button id="tab-calendar" class="settings-tab" :class="{'active': currentTab === 'calendar'}"
       @click="switchTab('calendar')" role="tab"
-      :aria-selected="currentTab === 'calendar'" title="Calendar (← →)">
+      :aria-selected="currentTab === 'calendar'" aria-controls="panel-calendar" title="Calendar (← →)">
       Calendar
     </button>
-    <button class="settings-tab" :class="{'active': currentTab === 'history'}"
+    <button id="tab-history" class="settings-tab" :class="{'active': currentTab === 'history'}"
       @click="switchTab('history')" role="tab"
-      :aria-selected="currentTab === 'history'" title="History (← →)">
+      :aria-selected="currentTab === 'history'" aria-controls="panel-history" title="History (← →)">
       History
     </button>
-    <button class="settings-tab" :class="{'active': currentTab === 'keyboard'}"
+    <button id="tab-keyboard" class="settings-tab" :class="{'active': currentTab === 'keyboard'}"
       @click="switchTab('keyboard')" role="tab"
-      :aria-selected="currentTab === 'keyboard'" title="Keyboard Shortcuts (← →)">
+      :aria-selected="currentTab === 'keyboard'" aria-controls="panel-keyboard" title="Keyboard Shortcuts (← →)">
       Keyboard Shortcuts
     </button>
   </div>
 
   <!-- ── TAB 0: PLAN SETTINGS ─────────────────────────────────── -->
-  <div class="settings-content" x-show="currentTab === 'plan-settings'">
+  <div id="panel-plan-settings" class="settings-content" role="tabpanel" tabindex="0" aria-labelledby="tab-plan-settings" x-show="currentTab === 'plan-settings'">
     <div>
       <div class="settings-section-header">
         <h2 class="settings-section-header__title">Plan Settings</h2>
@@ -70,11 +70,10 @@
               @change="updatePlanSetting('planName', $event.target.value)"
               placeholder="e.g., EMEA North – Capacity Plan">
             <label class="form-label" for="plan-desc">Plan Description</label>
-            <textarea id="plan-desc" class="form-input" rows="3"
+            <textarea id="plan-desc" class="form-input form-input--resizable" rows="3"
               :value="planSettings.planDescription"
               @change="updatePlanSetting('planDescription', $event.target.value)"
-              placeholder="Add any notes or description for this capacity plan..."
-              style="resize:vertical"></textarea>
+              placeholder="Add any notes or description for this capacity plan..."></textarea>
           </div>
 
           <!-- Active Locations -->
@@ -229,7 +228,7 @@
   </div>
 
   <!-- ── TAB 1: EMPLOYEES ──────────────────────────────────────── -->
-  <div class="settings-content" x-show="currentTab === 'employees'">
+  <div id="panel-employees" class="settings-content" role="tabpanel" tabindex="0" aria-labelledby="tab-employees" x-show="currentTab === 'employees'">
     <div>
       <div class="settings-section-header--row">
         <div>
@@ -365,7 +364,7 @@
   </div>
 
   <!-- ── TAB 2: FIXED COMMITMENTS ─────────────────────────────── -->
-  <div class="settings-content" x-show="currentTab === 'fixed-commitments'">
+  <div id="panel-fixed-commitments" class="settings-content" role="tabpanel" tabindex="0" aria-labelledby="tab-fixed-commitments" x-show="currentTab === 'fixed-commitments'">
     <div>
       <div class="settings-section-header">
         <h2 class="settings-section-header__title">Fixed Allocation</h2>
@@ -462,7 +461,7 @@
   </div>
 
   <!-- ── TAB 3: CALENDAR ──────────────────────────────────────── -->
-  <div class="settings-content" x-show="currentTab === 'calendar'">
+  <div id="panel-calendar" class="settings-content" role="tabpanel" tabindex="0" aria-labelledby="tab-calendar" x-show="currentTab === 'calendar'">
     <div>
       <div class="settings-section-header">
         <h2 class="settings-section-header__title">Working Days &amp; Bank Holidays</h2>
@@ -515,7 +514,7 @@
   </div>
 
   <!-- ── TAB 4: HISTORY ──────────────────────────────────────── -->
-  <div class="settings-content" x-show="currentTab === 'history'">
+  <div id="panel-history" class="settings-content" role="tabpanel" tabindex="0" aria-labelledby="tab-history" x-show="currentTab === 'history'">
     <div>
       <div class="settings-section-header">
         <h2 class="settings-section-header__title">Change History</h2>
@@ -548,7 +547,7 @@
   </div>
 
   <!-- ── TAB 5: KEYBOARD SHORTCUTS ─────────────────────────── -->
-  <div class="settings-content" x-show="currentTab === 'keyboard'">
+  <div id="panel-keyboard" class="settings-content" role="tabpanel" tabindex="0" aria-labelledby="tab-keyboard" x-show="currentTab === 'keyboard'">
     <div>
       <div class="settings-section-header">
         <h2 class="settings-section-header__title">Keyboard Shortcuts</h2>

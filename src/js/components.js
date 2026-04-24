@@ -137,7 +137,7 @@ export function registerComponents(Alpine) {
         ];
         case 'project_pct': return [
           { value: 'over',  label: `Over allocated (>${pct}%)`  },
-          { value: 'under', label: `Under allocated (>${pct}%)` },
+          { value: 'under', label: `Under allocated (<${pct}%)` },
         ];
         default: return [];
       }

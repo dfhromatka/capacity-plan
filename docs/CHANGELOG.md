@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.19.5] - 2026-04-24
+
+### Fixed
+- **A11Y-05** — ∑/≡ and 📦 filter toggles replaced with `<button class="filter-icon btn-icon">`. Redundant keydown handlers removed; `.btn-icon` reset rule added to `styles.css` (`src/index.html`, `src/css/styles.css`)
+- **A11Y-06** — All four sortable `<th>` headers now have `tabindex="0"` and `@keydown.enter` for keyboard sorting (`src/index.html`)
+- **A11Y-07** — RAG `<div>` replaced with `<button>` with dynamic `aria-label` describing current status (`src/index.html`)
+- **A11Y-08** — All 6 settings tab buttons now have `id` + `aria-controls`; all 6 panels now have `id`, `role="tabpanel"`, `tabindex="0"`, and `aria-labelledby` (`src/settings.html`)
+- **JS-08** — "Under allocated" filter label now correctly shows `<` instead of `>` (`src/js/components.js`)
+- **JS-09** — Audit detail for `updateFixedAllocationDesc` now reads `m.catId` instead of non-existent `m.descField` (`src/js/audit.js`)
+- **CSS-07** — `--shadow-focus-blue` and `--shadow-focus-input` now reference `var(--color-primary-border)` and `var(--color-primary-bg-active)` instead of raw hex (`src/css/design-tokens.css`)
+- **CSS-08** — Inline `style="resize:vertical"` on plan description textarea replaced with `.form-input--resizable` class (`src/settings.html`, `src/css/styles.css`)
+- **SEC-01** — `resolveCurrentUser()` now guards `if (!resp.ok) return` before parsing JSON from `/.auth/me` (`src/js/main.js`)
+
+---
+
 ## [3.19.4] - 2026-04-24
 
 ### Performance
