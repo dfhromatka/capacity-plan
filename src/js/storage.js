@@ -388,11 +388,8 @@ function _buildSavePayload() {
       expandedGroups:  s.expandedGroups,
       sortColumn:      s.sortColumn,
       sortDirection:   s.sortDirection,
-      viewStartIndex:     s.viewStartIndex,
-      showAvailCards:     s.showAvailCards,
-      collapseAllEntries: s.collapseAllEntries,
-      expandedInSummary:  s.expandedInSummary,
-      showArchived:       s.showArchived,
+      viewStartIndex:  s.viewStartIndex,
+      showAvailCards:  s.showAvailCards,
     },
     auditLog: getAuditLog(),
   };

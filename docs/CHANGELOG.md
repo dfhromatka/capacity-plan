@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.19.2] - 2026-04-24
+
+### Fixed
+- **REACT-02** — `expandedOH` moved from `$store.plan` to `$store.ui`; toggling Fixed Allocation rows no longer triggers a full `tableData`/`cardData`/`chartData` rebuild (`src/js/store.js`, `src/index.html`)
+- **REACT-03** — `collapseAllEntries`, `expandedInSummary`, `showArchived` moved from `$store.plan` to `$store.ui`; summary-mode toggles and archive filter no longer cause expensive store recomputation. `showArchived` removed from persisted payload — resets to `false` on reload (session-only UI state). (`src/js/store.js`, `src/js/data.js`, `src/js/storage.js`, `src/index.html`)
+- **ARCH-08** — `tableData` getter: removed 4 phantom `void` dep-touches (`filterISM`, `filterIPM`, `filterLocation`, `filterType` never existed in the store). Added explicit `void this.activeFilters` and `void Alpine.store('ui').showArchived` deps. (`src/js/store.js`)
+- **ARCH-09** — `cancelTempEntry(id)` extracted to plan store; calls `mutate()` so cache is invalidated and audit trail fires. `keyboard.js` Escape handler and `tableRow.cancel()` both delegate to it — no more duplicated inline filter logic. (`src/js/store.js`, `src/js/keyboard.js`, `src/js/components.js`)
+- **REACT-04** — `editDays` month input handler changed from in-place key assignment to reference replacement (`editDays = { ...editDays, [cell.i]: ... }`), making the change detectable by Alpine v3's reactive proxy. (`src/index.html`)
+
+---
+
 ## [3.19.1] - 2026-04-24
 
 ### Fixed

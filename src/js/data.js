@@ -240,9 +240,6 @@ export async function loadFromStorage() {
       if (stored.state.sortColumn !== undefined)         s.sortColumn          = stored.state.sortColumn;
       if (stored.state.sortDirection !== undefined)      s.sortDirection       = stored.state.sortDirection;
       if (stored.state.showAvailCards !== undefined)     s.showAvailCards      = stored.state.showAvailCards;
-      if (stored.state.collapseAllEntries !== undefined) s.collapseAllEntries  = stored.state.collapseAllEntries;
-      if (stored.state.expandedInSummary  !== undefined) s.expandedInSummary   = stored.state.expandedInSummary;
-      if (stored.state.showArchived       !== undefined) s.showArchived        = stored.state.showArchived;
     }
     if (Array.isArray(stored.auditLog)) initAuditLog(stored.auditLog);
     console.log(`Data loaded from storage (v${stored.dataVersion})`);
@@ -315,7 +312,7 @@ export function empStats(emp, mi, entriesByEmp) {
 export function empEntries(empId, entriesByEmp) {
   const s = Alpine.store('plan');
   let e = entriesByEmp ? (entriesByEmp.get(empId) ?? []) : s.entries.filter(x => x.empId === empId);
-  if (!s.showArchived) {
+  if (!Alpine.store('ui').showArchived) {
     const vis = s.visibleMonths;
     const mi0 = monthIdxMap.get(vis[0]?.key);
     const editingId = Alpine.store('ui').editingRowId;

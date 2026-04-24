@@ -225,19 +225,19 @@
 
     <div class="sidebar-filters__group--icons">
       <span @click="$store.plan.toggleCollapseAll()"
-        :title="$store.plan.collapseAllEntries ? 'Show detail rows' : 'Show summary'"
-        :class="{'filter-icon--active': $store.plan.collapseAllEntries, 'filter-icon--lg': !$store.plan.collapseAllEntries}"
-        :aria-pressed="$store.plan.collapseAllEntries"
+        :title="$store.ui.collapseAllEntries ? 'Show detail rows' : 'Show summary'"
+        :class="{'filter-icon--active': $store.ui.collapseAllEntries, 'filter-icon--lg': !$store.ui.collapseAllEntries}"
+        :aria-pressed="$store.ui.collapseAllEntries"
         role="button" tabindex="0"
         @keydown.enter.prevent="$store.plan.toggleCollapseAll()"
         @keydown.space.prevent="$store.plan.toggleCollapseAll()"
         class="filter-icon"
-        x-text="$store.plan.collapseAllEntries ? '≡' : '∑'">
+        x-text="$store.ui.collapseAllEntries ? '≡' : '∑'">
       </span>
       <span @click="$store.plan.toggleShowArchived()"
         title="Show archived rows"
-        :class="{'filter-icon--active': $store.plan.showArchived}"
-        :aria-pressed="$store.plan.showArchived"
+        :class="{'filter-icon--active': $store.ui.showArchived}"
+        :aria-pressed="$store.ui.showArchived"
         role="button" tabindex="0"
         @keydown.enter.prevent="$store.plan.toggleShowArchived()"
         @keydown.space.prevent="$store.plan.toggleShowArchived()"
@@ -417,10 +417,10 @@
               <td class="col-type col-info" colspan="5">
                 <div class="emp-header-row">
                   <button class="emp-name"
-                    :class="{'emp-name--expanded': $store.plan.collapseAllEntries && $store.plan.expandedInSummary[row.emp.id]}"
-                    @click="$store.plan.collapseAllEntries && $store.plan.toggleExpandInSummary(row.emp.id)"
-                    :aria-expanded="$store.plan.collapseAllEntries ? !!$store.plan.expandedInSummary[row.emp.id] : null"
-                    :title="$store.plan.collapseAllEntries ? (($store.plan.expandedInSummary[row.emp.id] ? 'Collapse' : 'Expand') + ' ' + row.emp.name) : ''">
+                    :class="{'emp-name--expanded': $store.ui.collapseAllEntries && $store.ui.expandedInSummary[row.emp.id]}"
+                    @click="$store.ui.collapseAllEntries && $store.plan.toggleExpandInSummary(row.emp.id)"
+                    :aria-expanded="$store.ui.collapseAllEntries ? !!$store.ui.expandedInSummary[row.emp.id] : null"
+                    :title="$store.ui.collapseAllEntries ? (($store.ui.expandedInSummary[row.emp.id] ? 'Collapse' : 'Expand') + ' ' + row.emp.name) : ''">
                     <span x-text="row.flag + ' ' + row.emp.name"></span>
                     <span x-show="row.availPct !== null" class="emp-avail-pct"
                       x-text="' (' + row.availPct + '%)'"></span>
@@ -430,7 +430,7 @@
                   <div class="emp-header-actions">
                     <button @click="$store.plan.toggleOH(row.emp.id)"
                       class="btn-oh-toggle"
-                      x-text="($store.plan.expandedOH[row.emp.id] ? '▼' : '▶') + ' Fixed Allocation'"></button>
+                      x-text="($store.ui.expandedOH[row.emp.id] ? '▼' : '▶') + ' Fixed Allocation'"></button>
                     <button @click="$store.modal.open('empEdit', { empId: row.emp.id })"
                       class="btn-emp-edit">✏️ Edit</button>
                   </div>
@@ -447,7 +447,7 @@
             </template>
             <!-- Fixed allocation (OH) row -->
             <template x-if="row.rowType === 'oh'">
-            <tr x-show="$store.plan.expandedOH[row.empId] && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId]) && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-oh">
+            <tr x-show="$store.ui.expandedOH[row.empId] && (!$store.ui.collapseAllEntries || $store.ui.expandedInSummary[row.empId]) && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false)" class="row-oh">
               <td class="col-type col-info tl"
                 x-text="row.icon + ' ' + row.label"></td>
               <!-- Bank holidays: plain cell; fixed alloc: editable description -->
@@ -475,7 +475,7 @@
             </template>
             <!-- Entry row -->
             <template x-if="row.rowType === 'entry'">
-            <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])"
+            <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.ui.collapseAllEntries || $store.ui.expandedInSummary[row.empId])"
               x-data="tableRow(row.id)"
               :class="[row.type === 'Project' ? 'row-project' : row.type === 'Other' ? 'row-other' : 'row-absence', isEditing ? 'row-editing' : '', row.archived ? 'row-archived' : '', row.filterMatch ? 'row-filter-match' : '']"
               @keydown="handleKeydown && handleKeydown($event)">
@@ -577,7 +577,7 @@
                   </div>
                   <input x-show="isEditing" type="number" min="0" max="31" step="0.5"
                     :value="editDays[cell.i] ?? 0"
-                    @input="editDays[cell.i] = parseFloat($event.target.value) || 0"
+                    @input="editDays = { ...editDays, [cell.i]: parseFloat($event.target.value) || 0 }"
                     class="inline-edit">
                 </td>
               </template>
@@ -600,7 +600,7 @@
             </template>
             <!-- Sub-total row -->
             <template x-if="row.rowType === 'sub'">
-            <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-sub">
+            <tr x-show="($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.ui.collapseAllEntries || $store.ui.expandedInSummary[row.empId])" class="row-sub">
               <td class="col-type col-info tl sub-label"></td>
               <td class="col-proj col-info"></td><td class="col-notes col-info"></td><td class="col-epsd col-info"></td><td class="col-rag col-info"></td>
               <template x-for="cell in row.subCells" :key="cell.key">
@@ -612,7 +612,7 @@
             </template>
             <!-- Add row button row -->
             <template x-if="row.rowType === 'addrow'">
-            <tr x-show="$store.ui.editingRowId === null && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.plan.collapseAllEntries || $store.plan.expandedInSummary[row.empId])" class="row-addrow">
+            <tr x-show="$store.ui.editingRowId === null && ($store.plan.groupBy === 'None' || $store.plan.expandedGroups[row.groupKey] !== false) && (!$store.ui.collapseAllEntries || $store.ui.expandedInSummary[row.empId])" class="row-addrow">
               <td class="col-type col-info addrow-sticky-cell" colspan="5">
                 <button @click="$store.plan.startInlineAdd(row.empId)"
                   class="btn-add-entry"

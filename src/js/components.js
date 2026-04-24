@@ -515,11 +515,7 @@ export function registerComponents(Alpine) {
     },
 
     cancel() {
-      const isNew = typeof entryId === 'string' && entryId.startsWith('temp-');
-      if (isNew) {
-        const s = Alpine.store('plan');
-        s.entries = s.entries.filter(e => e.id !== entryId);
-      }
+      Alpine.store('plan').cancelTempEntry(entryId);
       Alpine.store('ui').editingRowId = null;
     },
 

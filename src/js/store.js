@@ -156,7 +156,7 @@ function buildTableData(store) {
       });
 
       const totalEntries = byEmp.get(emp.id) ?? [];
-      if (visEntries.length > 0 || store.showArchived) {
+      if (visEntries.length > 0 || Alpine.store('ui').showArchived) {
         const empList = totalEntries;
         const subCells = visMonths.map(m => {
           const i = monthIdxMap.get(m.key);
@@ -208,16 +208,12 @@ export function registerStores(Alpine) {
     ],
     filterRowsShown: 1,
     groupBy:         'None',
-    expandedOH:      {},
     expandedGroups:  {},
     sortColumn:      null,
     sortDirection:   'asc',
     viewStartIndex: 11,   // index into months pool; default = one month before today
     visibleMonths:  [],   // maintained by _refreshVisibleMonths(); never set directly
     showAvailCards: true, // toggle: availability cards (true) vs. capacity chart (false)
-    collapseAllEntries: true,
-    expandedInSummary:  {},
-    showArchived:       false,
 
     // ── COMPUTED ───────────────────────────────────────────────
     _refreshVisibleMonths() {
@@ -386,14 +382,16 @@ export function registerStores(Alpine) {
 
     get tableData() {
       void this.employees; void this.entries; void this.months;
-      void this.filterISM; void this.filterIPM; void this.filterLocation; void this.filterType;
-      void this.groupBy; void this.sortColumn; void this.sortDirection; void this.showArchived;
+      void this.groupBy; void this.sortColumn; void this.sortDirection;
+      void this.activeFilters;
+      void Alpine.store('ui').showArchived;
       return buildTableData(this);
     },
 
     // ── TABLE OPERATIONS ───────────────────────────────────────
     toggleOH(empId) {
-      this.expandedOH = { ...this.expandedOH, [empId]: !this.expandedOH[empId] };
+      const ui = Alpine.store('ui');
+      ui.expandedOH = { ...ui.expandedOH, [empId]: !ui.expandedOH[empId] };
     },
 
     cycleRAG(entryId) {
@@ -451,6 +449,15 @@ export function registerStores(Alpine) {
         s.entries = s.entries.filter(e => e.id !== id);
       }, { entryId: id, project: entry.project },
         { type: 'entry', action: 'delete', id });
+    },
+
+    cancelTempEntry(id) {
+      if (typeof id !== 'string' || !id.startsWith('temp-')) return;
+      mutate('cancelTempEntry', () => {
+        const s = Alpine.store('plan');
+        s.entries = s.entries.filter(e => e.id !== id);
+      }, { entryId: id }, null);
+      Alpine.store('ui').editingRowId = null;
     },
 
     promptEntryAction(id) {
@@ -566,17 +573,16 @@ export function registerStores(Alpine) {
     },
 
     toggleCollapseAll() {
-      this.collapseAllEntries = !this.collapseAllEntries;
-      this.expandedInSummary  = {};
-      triggerAutoSave();
+      const ui = Alpine.store('ui');
+      ui.collapseAllEntries = !ui.collapseAllEntries;
+      ui.expandedInSummary  = {};
     },
     toggleExpandInSummary(empId) {
-      this.expandedInSummary = { ...this.expandedInSummary, [empId]: !this.expandedInSummary[empId] };
-      triggerAutoSave();
+      const ui = Alpine.store('ui');
+      ui.expandedInSummary = { ...ui.expandedInSummary, [empId]: !ui.expandedInSummary[empId] };
     },
     toggleShowArchived() {
-      this.showArchived = !this.showArchived;
-      triggerAutoSave();
+      Alpine.store('ui').showArchived = !Alpine.store('ui').showArchived;
     },
   });
 
@@ -587,6 +593,10 @@ export function registerStores(Alpine) {
     saveStatus:        'saved',  // 'saved' | 'saving' | 'failed' | 'offline'
     currentUser:       null,     // set by resolveCurrentUser() in main.js
     pendingWriteCount: 0,        // queued writes not yet persisted
+    expandedOH:        {},
+    collapseAllEntries: true,
+    expandedInSummary:  {},
+    showArchived:       false,
   });
 
   // ── MODAL STORE ────────────────────────────────────────────

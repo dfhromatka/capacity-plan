@@ -23,34 +23,23 @@ Feature IDs use increments of 10 (e.g., #1000, #1010, #1020) to allow for future
 ### [#1170] ~~Framework Migration~~ — *Superseded by v2.0 Alpine.js migration (completed v3.0.0)*
 
 ### [#1180] Azure Back-End Integration & Multi-User
-Production deployment with collaboration features:
 
-- **Azure Storage Back-End** - Replace localStorage with Azure Table Storage or Cosmos DB
-  - REST API integration for CRUD operations (via Azure Function or direct)
-  - Authentication via Azure AD (SWA built-in `/.auth/me` endpoint)
-  - Enables multi-user deployment
+**Scoped decisions (April 2026):**
+- **Tier:** SWA Free tier (managed AAD auth via `/.auth/me` is sufficient)
+- **Storage:** Azure Table Storage via Azure Function wrapper (per-record, not full-blob)
+- **Data model:** One shared plan (`partitionKey: "main"`); row key = `{type}_{id}`
+- **Auth:** Entra ID via existing App Registration (admin access confirmed; redirect URI added post-M1)
+- **Cost:** ~$0/month (SWA Free) + < $1/month (Table Storage at this scale)
+- **Deployment:** Manual via SWA CLI; see `docs/SWA_DEPLOYMENT.md` for step-by-step
 
-- **Conflict Detection** - Concurrent editing protection
-  - Detect when multiple users edit same data
-  - Timestamp-based change tracking
-  - Conflict resolution UI
-  - "Last saved by" indicator
+**Milestones:**
+- **M1** — Deploy existing app to SWA (localStorage, no auth). Blocked on IT creating Resource Group.
+- **M2+M3** — Auth + Azure storage adapter, done together (auth provides identity for storage)
 
-- **Real-time Updates** - Live data synchronization
-  - Polling mechanism to fetch updates (every 30–60s)
-  - Visual notification when data changes
-  - Auto-refresh with user consent
-
-- **Entra ID Authentication** - Enterprise SSO
-  - Azure AD identity provider configured in SWA settings
-  - User identity via `/.auth/me` → `clientPrincipal.userDetails`
-  - Audit trail with user attribution
-
-- **Version History & Audit Trail** - Track changes over time
-  - Log all modifications with timestamps
-  - User attribution for changes
-  - Rollback capability
-  - Change diff viewer
+**Remaining sub-features (unscoped):**
+- **Conflict Detection** — ETag-based per-record conflict detection; "Someone else saved this, reload?" prompt
+- **Real-time Updates** — Polling every 30–60s; visual notification when data changes
+- **Version History** — Change diff viewer; point-in-time restore (audit log foundation already exists in `audit.js`)
 
 ### [#1190] Mobile Responsive View
 Tablet and phone optimization:

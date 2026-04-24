@@ -117,31 +117,52 @@ Call `resolveCurrentUser()` before `loadFromStorage()` in `src/js/app.js`.
 
 ---
 
-## Implementing the Azure Storage Adapter
+## Implementing the Azure Storage Adapter (M3)
 
-When ready to replace `localStorage` with a persistent remote backend, implement these two methods in `js/storage.js`:
+**Decision:** Azure Table Storage via Azure Function wrapper (connection strings stay server-side).
+
+**Data model:**
+- Partition key: `"main"` (one shared plan)
+- Row key: `{type}_{id}` — e.g. `entry_42`, `employee_3`, `settings`, `locations`
+- Value: JSON-serialised record
+
+**Function endpoints (3 total):**
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/data` | Load all records for partition `"main"` |
+| PUT | `/api/records` | Upsert one record |
+| DELETE | `/api/records/{type}/{id}` | Delete one record |
+
+**Auth gating:** SWA automatically injects the authenticated user's identity into every `/api/*` request via the `x-ms-client-principal` header. The Function reads this header to verify the caller is authenticated and to attribute saves.
+
+**Conflict detection:** Azure Table Storage returns an `ETag` per row. Send it back on PUT; if another user saved first, Azure returns 412 — show "Someone else saved this, reload?" prompt.
+
+**Implement these methods in `src/js/storage.js`:**
 
 ```javascript
 async _saveRecordToAzure(type, record) {
-  // POST/PUT to your Azure Function or Table Storage REST endpoint
-  // e.g. POST /api/records with { type, record }
+  const res = await fetch('/api/records', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, record })
+  });
+  if (!res.ok) throw new Error(`Save failed: ${res.status}`);
 },
 
 async _deleteRecordFromAzure(type, id) {
-  // DELETE to your Azure Function or Table Storage REST endpoint
-  // e.g. DELETE /api/records/${type}/${id}
+  const res = await fetch(`/api/records/${type}/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
 },
 ```
 
 Then change `adapter: 'localStorage'` to `adapter: 'azure'` in `Storage`.
 
-For **Azure Table Storage** directly, or for **Cosmos DB**, consider wrapping the calls behind an **Azure Function** (HTTP trigger) to avoid exposing connection strings in client-side code.
-
 ---
 
 ## Data Structure (Full-Blob Reference)
 
-Used by the bulk `save()` / `load()` API (undo/redo, initial load). Built by `_buildSavePayload()` in `src/js/storage.js`:
+Used by the bulk `load()` API (initial load). Built by `_buildSavePayload()` in `src/js/storage.js`:
 
 ```javascript
 {
@@ -189,15 +210,24 @@ swa start http://localhost:5173 --run "npm run dev"
 
 ## Deployment Checklist
 
-### Full SWA deployment (with auth + remote storage)
-- [ ] Create SWA resource and connect GitHub repo
-- [ ] Enable AAD authentication in SWA settings
-- [ ] Implement `resolveCurrentUser()` using `/.auth/me`
-- [ ] Implement `_saveRecordToAzure()` and `_deleteRecordFromAzure()` in `storage.js`
-- [ ] Change `adapter: 'azure'` in `storage.js`
+### M1 — Deploy (localStorage, no auth)
+- [ ] IT creates Resource Group with Contributor access
+- [ ] Create SWA resource (Free tier) inside the Resource Group
+- [ ] `npm run build` → `npx @azure/static-web-apps-cli deploy dist/ --deployment-token <token>`
+- [ ] Verify app loads at the SWA URL
+- [ ] Note the SWA URL for Steps M2/M3
+
+### M2+M3 — Auth + Azure Storage (do together)
+- [ ] Add redirect URI to App Registration: `https://<swa-url>/.auth/login/aad/callback`
+- [ ] Note client ID, tenant ID, and new client secret from App Registration
+- [ ] Enable AAD auth in SWA resource → Authentication
+- [ ] Implement `resolveCurrentUser()` in `src/js/app.js`
+- [ ] Create Azure Function App with Table Storage connection string
+- [ ] Implement `/api/data`, `/api/records` (PUT), `/api/records/{type}/{id}` (DELETE) Function endpoints
+- [ ] Implement `_saveRecordToAzure()` and `_deleteRecordFromAzure()` in `src/js/storage.js`
+- [ ] Change `adapter: 'azure'` in `src/js/storage.js`
 - [ ] Export localStorage backup before switching adapters
-- [ ] Test save, load, and undo/redo end-to-end with real AAD identities
-- [ ] Configure CORS on the Azure Function / storage backend
+- [ ] Test save, load, and conflict detection end-to-end with real AAD identities
 
 ---
 

@@ -21,9 +21,7 @@ function _handleGlobalKeyboard(e) {
     const editingRowId = Alpine.store('ui').editingRowId;
     if (editingRowId) {
       e.preventDefault();
-      if (typeof editingRowId === 'string' && editingRowId.startsWith('temp-')) {
-        Alpine.store('plan').entries = Alpine.store('plan').entries.filter(en => en.id !== editingRowId);
-      }
+      Alpine.store('plan').cancelTempEntry(editingRowId);
       Alpine.store('ui').editingRowId = null;
       return;
     }

@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-24 (v3.19.1)
+> **Last updated:** 2026-04-24 (v3.19.2)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -16,69 +16,6 @@
 ---
 
 ## Open Issues
-
----
-
-### ARCH-08 — `tableData` touches non-existent store properties as reactive deps 🟡
-
-**File:** `src/js/store.js` (`tableData` getter, ~line 375)
-
-```js
-void this.filterISM; void this.filterIPM; void this.filterLocation; void this.filterType;
-```
-
-None of these properties exist on `Alpine.store('plan')`. Alpine v3 cannot proxy non-existent properties — these `void` reads evaluate to `undefined` and register no reactive dependency. The intent was presumably to force `tableData` to re-run on filter change, but `activeFilters` already provides this dependency through `visibleEmployees`. These are misleading dead code.
-
-**Fix direction:** Remove the four nonexistent `void` reads. Add `void this.activeFilters;` explicitly if you want the dependency to be visible at the getter level.
-
----
-
-### ARCH-09 — `keyboard.js` Escape path bypasses `mutate()` when cancelling a temp entry 🟡
-
-**File:** `src/js/keyboard.js` (~line 25)
-
-```js
-Alpine.store('plan').entries = Alpine.store('plan').entries.filter(en => en.id !== editingRowId);
-Alpine.store('ui').editingRowId = null;
-```
-
-The `entries` write is a data mutation without `mutate()`, so `invalidateEmpStatsCache()` is never called and no audit entry is created. This also duplicates the `cancel()` logic in `tableRow`.
-
-**Fix direction:** Extract a `cancelTempEntry(id)` method on the plan store that calls `mutate()`, and call it from both `keyboard.js` and `tableRow.cancel()`.
-
----
-
-### REACT-02 — `expandedOH` belongs in `$store.ui`, not `$store.plan` 🟡
-
-**File:** `src/js/store.js` (store definition and `toggleOH`)
-
-`expandedOH` is a display-only toggle that controls whether fixed allocation rows are visible. It lives in `$store.plan`, meaning every OH row toggle triggers a full re-evaluation of `tableData`, `cardData`, and `chartData`. No data changes — only row visibility changes.
-
-**Fix direction:** Move `expandedOH` to `Alpine.store('ui')`. Update `toggleOH()` and all template references from `$store.plan.expandedOH` to `$store.ui.expandedOH`.
-
----
-
-### REACT-03 — `collapseAllEntries`, `expandedInSummary`, `showArchived` belong in `$store.ui` 🟡
-
-**File:** `src/js/store.js`, `src/index.html`
-
-All three are display-only toggles in `$store.plan`. Every expansion or summary-mode toggle triggers `tableData`/`cardData`/`chartData`. Note: `showArchived` does affect which rows appear in `tableData`, so moving it to `$store.ui` requires `tableData` to explicitly read `Alpine.store('ui').showArchived` — this is the correct solution.
-
-**Fix direction:** Move all three to `Alpine.store('ui')`. In `tableData` / `empEntries`, read `showArchived` from `Alpine.store('ui')` rather than `this`. Update all template references.
-
----
-
-### REACT-04 — `editDays[cell.i] = ...` is not reactive in Alpine v3 🟡
-
-**File:** `src/js/components.js` (`tableRow` month cell input, ~line 577)
-
-```js
-@input="editDays[cell.i] = parseFloat($event.target.value) || 0"
-```
-
-`editDays` is a plain `{}` in `x-data`. In-place key assignment on a plain object is not detected by Alpine v3's reactive proxy. Any template expression that reads `editDays[cell.i]` will not re-render. The value is read correctly in `save()` via direct property access, but the pattern should be corrected.
-
-**Fix direction:** Replace with `editDays = { ...editDays, [cell.i]: parseFloat($event.target.value) || 0 }`.
 
 ---
 
@@ -513,11 +450,11 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | ARCH-05 | ✅ Fixed v3.19.1 | `src/js/store.js` | `deleteEntry` now goes through `mutate()` |
 | ARCH-06 | ✅ Fixed v3.19.1 | `src/js/settings-page.js` | `months[idx]` mutations replaced with array reference replacements |
 | ARCH-07 | ✅ Fixed v3.19.1 | `src/js/store.js` | Duplicate empty `ismOptions` getter removed |
-| ARCH-08 | 🟡 Important | `src/js/store.js` | `tableData` voids non-existent store props |
-| ARCH-09 | 🟡 Important | `src/js/keyboard.js` | Escape cancel-temp-entry bypasses `mutate()` |
-| REACT-02 | 🟡 Important | `src/js/store.js` | `expandedOH` should be in `$store.ui` |
-| REACT-03 | 🟡 Important | `src/js/store.js`, `src/index.html` | `collapseAllEntries`, `expandedInSummary`, `showArchived` should be in `$store.ui` |
-| REACT-04 | 🟡 Important | `src/js/components.js` | `editDays[cell.i] =` not reactive in Alpine v3 |
+| ARCH-08 | ✅ Fixed v3.19.2 | `src/js/store.js` | Phantom void deps removed; `activeFilters` + `ui.showArchived` added |
+| ARCH-09 | ✅ Fixed v3.19.2 | `src/js/store.js`, `src/js/keyboard.js` | `cancelTempEntry()` extracted; keyboard.js + cancel() delegate to it |
+| REACT-02 | ✅ Fixed v3.19.2 | `src/js/store.js`, `src/index.html` | `expandedOH` moved to `$store.ui` |
+| REACT-03 | ✅ Fixed v3.19.2 | `src/js/store.js`, `src/js/data.js`, `src/js/storage.js`, `src/index.html` | `collapseAllEntries`, `expandedInSummary`, `showArchived` moved to `$store.ui` |
+| REACT-04 | ✅ Fixed v3.19.2 | `src/index.html` | `editDays[cell.i]=` → reference replacement pattern |
 | PERF-05 | 🟡 Important | `src/js/store.js` | Per-bar `.filter(type)` in `chartData` |
 | PERF-06 | 🟡 Important | `src/js/data.js` | `empStats` O(n) fallback in `getGroupStats` |
 | PERF-07 | 🟢 Enhancement | `src/js/store.js` | Redundant `void` dep-touches in `cardData`/`chartData` |
