@@ -407,13 +407,13 @@ export function getGroupedEmployees(employees, groupBy) {
   return groupsArray;
 }
 
-export function getGroupStats(groupEmployees, visibleMonths) {
+export function getGroupStats(groupEmployees, visibleMonths, byEmp) {
   if (!visibleMonths || !visibleMonths.length) return { count: groupEmployees.length, avgUtil: 0 };
   const firstMonthIndex = monthIdxMap.get(visibleMonths[0].key);
   let totalAvail = 0;
   let totalCapacity = 0;
   groupEmployees.forEach(emp => {
-    const stats = empStats(emp, firstMonthIndex);
+    const stats = empStats(emp, firstMonthIndex, byEmp);
     const effectiveAvail = getEffectiveAvailability(emp, visibleMonths[0].key);
     totalCapacity += visibleMonths[0].workingDays * effectiveAvail;
     totalAvail    += stats.avail;

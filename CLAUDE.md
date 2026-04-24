@@ -4,16 +4,17 @@
 
 - **Never commit unless explicitly asked.** The user decides when work is done.
 - **Never create or switch branches unless explicitly asked.**
-- When asked to commit, write a meaningful present-tense message describing the change.
+- When asked to commit, write a short single-line present-tense message — one sentence covering the "why", issue IDs in parentheses at the end. No body, no bullets.
 - When a task is experimental or risky, suggest a feature branch proactively — but don't create it without approval.
 - When asked to commit and push, do both in sequence.
-- **At the end of every task, output the exact `git add` command and a suggested `git commit` message** listing all files changed during that task and all issus addressed. Example:
+- **At the end of every task, run `git status --short` then output a `git add` command and a suggested `git commit` message** covering all issues addressed:
+  - **Clean tree** (everything already committed): list only the current task's changed files.
+  - **Dirty tree** (uncommitted changes from a prior session): fold all uncommitted files into one combined `git add` + commit message covering every issue addressed since the last commit.
   ```
   git add src/js/store.js src/js/data.js docs/CHANGELOG.md
 
   git commit -m "code review critical issues: ARCH-05, ARCH-06, ARCH-07, CSS-05"
   ```
-  Do not include files that were already modified before the task started (e.g. pre-existing uncommitted changes).
 
 ---
 

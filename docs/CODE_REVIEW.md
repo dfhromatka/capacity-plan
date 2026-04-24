@@ -19,48 +19,31 @@
 
 ---
 
-### PERF-05 — Per-bar `.filter(type)` inside `chartData` getter 🟡
+### PERF-05 — Per-bar `.filter(type)` inside `chartData` getter ✅ Fixed v3.19.4
 
-**File:** `src/js/store.js` (`chartData` getter, ~line 356)
-
-```js
-const proj = vis.reduce((sum, emp) => {
-  const empList = byEmp.get(emp.id) ?? [];
-  return sum + empList.filter(e => e.type === 'Project').reduce(...);
-}, 0);
-```
+**File:** `src/js/store.js` (`chartData` getter)
 
 Two `.filter()` passes per employee per month bar (once for `'Project'`, once for `!== 'Project'`). With 20 employees × 13 bars that is 520 filter passes per chart render.
 
-**Fix direction:** Pre-build a `Map<empId, {proj: entry[], other: entry[]}>` once at the top of `chartData`, splitting by type in a single O(n) pass through `byEmp`.
+**Fix:** Pre-builds a `byEmpSplit` map once at the top of `chartData` in a single O(n) pass through `byEmp`.
 
 ---
 
-### PERF-06 — `empStats` O(n) fallback triggered in `getGroupStats` 🟡
+### PERF-06 — `empStats` O(n) fallback triggered in `getGroupStats` ✅ Fixed v3.19.4
 
 **File:** `src/js/data.js` (`empStats` line 304, `getGroupStats` line 421)
 
-```js
-const empList = entriesByEmp ? ... : s.entries.filter(e => e.empId === emp.id);
-```
+`getGroupStats` called `empStats(emp, firstMonthIndex)` without passing a pre-built map, hitting the O(n) filter fallback for each employee in the group.
 
-`getGroupStats` calls `empStats(emp, firstMonthIndex)` without passing a pre-built map, hitting the O(n) filter fallback for each employee in the group.
-
-**Fix direction:** Thread the `byEmp` map through to `getGroupStats`. `buildTableData` already builds it and is the only caller of `getGroupStats` — pass it as a third argument.
+**Fix:** Added `byEmp` as third parameter to `getGroupStats`; `buildTableData` now passes its existing `byEmp` map through.
 
 ---
 
-### PERF-07 — Redundant `void` dep-touches in `cardData` and `chartData` 🟢
+### PERF-07 — Redundant `void` dep-touches in `cardData` and `chartData` ✅ Fixed v3.19.4
 
-**File:** `src/js/store.js` (~line 327, ~line 347)
+**File:** `src/js/store.js`
 
-```js
-void this.employees; void this.entries; void this.months; void this.activeFilters;
-```
-
-`visibleEmployees` (called inside both getters) already reads all four, registering the dependencies. The explicit `void` lines cause Alpine to register each dependency twice — each store write schedules two reactive flushes.
-
-**Fix direction:** Remove the explicit `void` lines from `cardData` and `chartData`.
+`void this.employees; void this.entries; void this.months; void this.activeFilters;` lines removed from both getters. `visibleEmployees` already registers all four deps.
 
 ---
 
@@ -413,9 +396,9 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | REACT-02 | ✅ Fixed v3.19.2 | `src/js/store.js`, `src/index.html` | `expandedOH` moved to `$store.ui` |
 | REACT-03 | ✅ Fixed v3.19.2 | `src/js/store.js`, `src/js/data.js`, `src/js/storage.js`, `src/index.html` | `collapseAllEntries`, `expandedInSummary`, `showArchived` moved to `$store.ui` |
 | REACT-04 | ✅ Fixed v3.19.2 | `src/index.html` | `editDays[cell.i]=` → reference replacement pattern |
-| PERF-05 | 🟡 Important | `src/js/store.js` | Per-bar `.filter(type)` in `chartData` |
-| PERF-06 | 🟡 Important | `src/js/data.js` | `empStats` O(n) fallback in `getGroupStats` |
-| PERF-07 | 🟢 Enhancement | `src/js/store.js` | Redundant `void` dep-touches in `cardData`/`chartData` |
+| PERF-05 | ✅ Fixed v3.19.4 | `src/js/store.js` | Pre-split byEmpSplit map in chartData; `.filter(type)` eliminated |
+| PERF-06 | ✅ Fixed v3.19.4 | `src/js/data.js`, `src/js/store.js` | `byEmp` threaded through getGroupStats; O(n) fallback eliminated |
+| PERF-07 | ✅ Fixed v3.19.4 | `src/js/store.js` | Redundant void dep-touches removed from cardData and chartData |
 | STOR-05 | 🔴 Critical | `src/js/storage.js` | `saveRecord`/`deleteRecord` azure branch not returning Promise |
 | STOR-06 | ✅ Fixed v3.19.3 | `src/js/storage.js`, `src/js/data.js` | `activeFilters` + `filterRowsShown` removed from persisted payload and restore |
 | STOR-07 | ✅ Fixed v3.19.3 | `src/js/storage.js`, `src/js/settings-page.js` | `exportData` now calls `buildSavePayload()` directly; `Storage.load()` round-trip eliminated |

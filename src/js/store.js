@@ -77,7 +77,7 @@ function buildTableData(store) {
 
   grouped.forEach(group => {
     const isExpanded = store.groupBy === 'None' || store.expandedGroups[group.key] !== false;
-    const groupStats = (store.groupBy !== 'None' && !isExpanded) ? getGroupStats(group.employees, visMonths) : null;
+    const groupStats = (store.groupBy !== 'None' && !isExpanded) ? getGroupStats(group.employees, visMonths, byEmp) : null;
 
     if (store.groupBy !== 'None') {
       rows.push({ rowType: 'group', key: 'grp-' + group.key, groupKey: group.key, label: group.label, isExpanded, groupStats, mthCells: visMonths.map(m => ({ key: m.key })) });
@@ -335,9 +335,6 @@ export function registerStores(Alpine) {
     },
 
     get cardData() {
-      // Touch reactive deps so Alpine re-evaluates when they change
-      void this.employees; void this.entries; void this.months;
-      void this.activeFilters;
       return buildCardData(this);
     },
 
@@ -354,22 +351,33 @@ export function registerStores(Alpine) {
     },
 
     get chartData() {
-      void this.employees; void this.entries; void this.months;
       void this.activeFilters;
+      void Alpine.store('ui').showArchived;
       const vis = this.visibleEmployees;
       if (!vis.length) return [];
-      const visMonths  = this.visibleMonths;
+      const visMonths = this.visibleMonths;
       const byEmp = buildEntriesByEmp(this.entries);
+
+      const byEmpSplit = new Map();
+      for (const [empId, list] of byEmp) {
+        const proj = [], nonProj = [];
+        for (const e of list) {
+          if (e.type === 'Project') proj.push(e);
+          else nonProj.push(e);
+        }
+        byEmpSplit.set(empId, { proj, nonProj });
+      }
+
       const bars = visMonths.map(vm => {
-      const i     = monthIdxMap.get(vm.key);
-        const proj  = vis.reduce((sum, emp) => {
-          const empList = byEmp.get(emp.id) ?? [];
-          return sum + empList.filter(e => e.type === 'Project').reduce((t, e) => t + (e.days[i] || 0), 0);
+        const i    = monthIdxMap.get(vm.key);
+        const proj = vis.reduce((sum, emp) => {
+          const { proj: pl } = byEmpSplit.get(emp.id) ?? { proj: [], nonProj: [] };
+          return sum + pl.reduce((t, e) => t + (e.days[i] || 0), 0);
         }, 0);
-        const oh    = vis.reduce((sum, emp) => sum + empStats(emp, i, byEmp).oh, 0);
-        const abs   = vis.reduce((sum, emp) => {
-          const empList = byEmp.get(emp.id) ?? [];
-          return sum + empList.filter(e => e.type !== 'Project').reduce((t, e) => t + (e.days[i] || 0), 0);
+        const oh   = vis.reduce((sum, emp) => sum + empStats(emp, i, byEmp).oh, 0);
+        const abs  = vis.reduce((sum, emp) => {
+          const { nonProj: nl } = byEmpSplit.get(emp.id) ?? { proj: [], nonProj: [] };
+          return sum + nl.reduce((t, e) => t + (e.days[i] || 0), 0);
         }, 0);
         const avail = Math.max(0, vis.reduce((sum, emp) => sum + empStats(emp, i, byEmp).avail, 0));
         const total = proj + oh + abs + avail;

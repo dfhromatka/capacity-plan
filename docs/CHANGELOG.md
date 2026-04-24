@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.19.4] - 2026-04-24
+
+### Performance
+- **PERF-05** — `chartData` no longer runs two `.filter(type)` passes per employee per bar. A `byEmpSplit` map pre-splits entries into `proj`/`nonProj` lists in a single O(n) pass before the bar loop, eliminating ~520 filter passes per render on a typical dataset (`src/js/store.js`)
+- **PERF-06** — `getGroupStats` now accepts `byEmp` as a third argument and threads it to `empStats`, eliminating the O(n) per-employee scan that was previously triggered for every collapsed group header (`src/js/data.js`, `src/js/store.js`)
+- **PERF-07** — Removed redundant `void this.employees; void this.entries; void this.months; void this.activeFilters;` dep-touch lines from `cardData` and `chartData`. `visibleEmployees` (called inside both) already registers all four deps through Alpine's reactive proxy — the explicit lines caused each dep to be registered twice, scheduling two flushes per store write (`src/js/store.js`)
+
+---
+
 ## [3.19.3] - 2026-04-24
 
 ### Fixed
