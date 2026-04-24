@@ -1,7 +1,6 @@
 Read CLAUDE.md, docs/ARCHITECTURE.md, docs/CODE_REVIEW.md, and docs/ROADMAP.md.
 
 Then:
-0. figure out why there is a readme in root and another one in /docs
 1. Identify the highest-priority open item(s) to work on.
 2. Before proposing anything, treat CLAUDE.md as hard constraints — not suggestions. Flag any approach that would require bending an architectural rule.
 3. For any CSS work: grep src/css/design-tokens.css and src/css/styles.css before proposing new tokens or classes.

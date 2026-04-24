@@ -60,7 +60,9 @@ function buildTableData(store) {
       return sum + s.oh + s.alloc;
     }, 0);
     const util      = totalWD > 0 ? Math.min(1, totalAlloc / totalWD) : 0;
-    const utilColor = util > 0.9 ? '#ef4444' : util > 0.7 ? '#f59e0b' : '#22c55e';
+    const utilColor = util > 0.9 ? 'var(--color-danger)'
+                   : util > 0.7 ? 'var(--color-warning)'
+                   :               'var(--color-success)';
     let daysLabel   = m.workingDays + 'd';
     if (isSingleEmp) {
       const ea  = getEffectiveAvailability(vis[0], m.key);
@@ -299,9 +301,6 @@ export function registerStores(Alpine) {
     },
 
     get ismOptions() {
-    },
-
-    get ismOptions() {
       const isms = [...new Set(this.employees.map(e => e.ism).filter(Boolean))].sort();
       return [{ value: 'All', label: 'All ISMs' }, ...isms.map(v => ({ value: v, label: v }))];
     },
@@ -445,9 +444,13 @@ export function registerStores(Alpine) {
     },
 
     deleteEntry(id) {
-      const s = Alpine.store('plan');
-      s.entries = s.entries.filter(e => e.id !== id);
-      Storage.deleteRecord('entry', id);
+      const entry = this.entries.find(e => e.id === id);
+      if (!entry) return;
+      mutate('deleteEntry', () => {
+        const s = Alpine.store('plan');
+        s.entries = s.entries.filter(e => e.id !== id);
+      }, { entryId: id, project: entry.project },
+        { type: 'entry', action: 'delete', id });
     },
 
     promptEntryAction(id) {

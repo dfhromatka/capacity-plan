@@ -316,7 +316,7 @@ export function settingsPage() {
         const s = _store();
         const key = s.months[idx].key;
         const wd = parseFloat(value) || 0;
-        s.months[idx].workingDays = wd;
+        s.months = s.months.map((m, i) => i !== idx ? m : { ...m, workingDays: wd });
         s.monthConfig = { ...s.monthConfig, [key]: { ...(s.monthConfig[key] || {}), workingDays: wd } };
       }, { monthIndex: idx, field: 'workingDays', value }, { type: 'month', record: _store().months[idx] });
     },
@@ -326,9 +326,11 @@ export function settingsPage() {
         const s = _store();
         const key = s.months[idx].key;
         const hols = parseFloat(value) || 0;
-        if (!s.months[idx].holidays) s.months[idx].holidays = {};
-        s.months[idx].holidays[code] = hols;
         const existing = s.monthConfig[key] || {};
+        s.months = s.months.map((m, i) => i !== idx ? m : {
+          ...m,
+          holidays: { ...(m.holidays || {}), [code]: hols }
+        });
         s.monthConfig = { ...s.monthConfig, [key]: {
           ...existing,
           holidays: { ...(existing.holidays || {}), [code]: hols }

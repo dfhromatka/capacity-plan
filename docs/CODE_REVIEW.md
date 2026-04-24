@@ -1,6 +1,6 @@
 # Capacity Planning Tool — Code Review & Improvement Opportunities
 
-> **Last updated:** 2026-04-23 (v3.19.0)
+> **Last updated:** 2026-04-24 (v3.19.1)
 > **Purpose:** Open architectural debt and known issues. Resolved items are in git history.
 
 > **New to the codebase?** Read `docs/ARCHITECTURE.md` first.
@@ -16,57 +16,6 @@
 ---
 
 ## Open Issues
-
----
-
-### ARCH-05 — `deleteEntry` bypasses `mutate()` 🔴
-
-**File:** `src/js/store.js` (`deleteEntry` method, ~line 432)
-
-**Symptom:** `deleteEntry` writes directly to `s.entries` without calling `mutate()`. `invalidateEmpStatsCache()` is never called, so `empStats` can serve stale cached values for the deleted entry until the next unrelated mutation. No undo snapshot is taken and no audit entry is created.
-
-```js
-deleteEntry(id) {
-  const s = Alpine.store('plan');
-  s.entries = s.entries.filter(e => e.id !== id);  // bypasses mutate()
-  Storage.deleteRecord('entry', id);
-}
-```
-
-**Fix direction:** Wrap the mutation in `mutate('deleteEntry', () => { s.entries = s.entries.filter(e => e.id !== id); }, { entryId: id }, { type: 'entry', action: 'delete', id })`.
-
----
-
-### ARCH-06 — In-place `months[idx]` mutation in `updateMonthWorkingDays` / `updateMonthHoliday` 🔴
-
-**File:** `src/js/settings-page.js` (`updateMonthWorkingDays` ~line 319, `updateMonthHoliday` ~line 329)
-
-**Symptom:** Both methods mutate properties directly on the array element (`s.months[idx].workingDays = wd`, `s.months[idx].holidays[code] = hols`). Alpine v3 does not detect nested property mutation — only a reference replacement triggers reactivity. More critically, `state.months` in `data.js` is a **separate reference** from `s.months` (they share elements, not the array). After this mutation, `state.months` is out of sync with the store, so `empStats`, `bh()`, and any function using `state.months` will compute with stale working-day / holiday values until the page is reloaded.
-
-**Fix direction:** Replace both mutations with an immutable map:
-```js
-s.months = s.months.map((m, i) => i !== idx ? m : { ...m, workingDays: wd });
-state.months = s.months;
-rebuildMonthIdxMap();
-```
-Apply the same pattern for the holidays mutation.
-
----
-
-### ARCH-07 — Duplicate empty `ismOptions` getter 🔴
-
-**File:** `src/js/store.js` (~line 289)
-
-```js
-get ismOptions() {
-},          // empty first definition — silently overridden by the second below
-get ismOptions() {
-  const isms = ...
-```
-
-Two `get ismOptions()` definitions on the same object literal. The first is empty and the second contains the real implementation. This is dead code and a bundler strictness trap.
-
-**Fix direction:** Delete the empty first `get ismOptions() {}` block (lines 289–291).
 
 ---
 
@@ -290,20 +239,6 @@ Interactive `<div>` with no `role`, no `tabindex`, no keyboard handler, and no `
 Each `<button role="tab">` sets `:aria-selected` but has no `aria-controls` pointing to a panel. No panel has `role="tabpanel"`. Screen readers cannot navigate the tab–panel relationship.
 
 **Fix direction:** Add `id` attributes to each panel's `x-show` div. Add `aria-controls="panel-id"` to each tab button. Add `role="tabpanel"` and `tabindex="0"` to each panel.
-
----
-
-### CSS-05 — Raw hex colour values used for utilisation bar in JS 🔴
-
-**File:** `src/js/store.js` (`buildTableData`, ~line 63)
-
-```js
-const utilColor = util > 0.9 ? '#ef4444' : util > 0.7 ? '#f59e0b' : '#22c55e';
-```
-
-Raw hex colours in a JS computed value, bypassing the design token system.
-
-**Fix direction:** Use CSS variable strings: `'var(--color-danger)'`, `'var(--color-warning)'`, `'var(--color-success)'`. These work correctly in Alpine `:style` bindings.
 
 ---
 
@@ -575,9 +510,9 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 
 | ID | Severity | File(s) | Status |
 |----|----------|---------|--------|
-| ARCH-05 | 🔴 Critical | `src/js/store.js` | `deleteEntry` bypasses `mutate()` |
-| ARCH-06 | 🔴 Critical | `src/js/settings-page.js` | In-place `months[idx]` mutation — stale `state.months` |
-| ARCH-07 | 🔴 Critical | `src/js/store.js` | Duplicate empty `ismOptions` getter |
+| ARCH-05 | ✅ Fixed v3.19.1 | `src/js/store.js` | `deleteEntry` now goes through `mutate()` |
+| ARCH-06 | ✅ Fixed v3.19.1 | `src/js/settings-page.js` | `months[idx]` mutations replaced with array reference replacements |
+| ARCH-07 | ✅ Fixed v3.19.1 | `src/js/store.js` | Duplicate empty `ismOptions` getter removed |
 | ARCH-08 | 🟡 Important | `src/js/store.js` | `tableData` voids non-existent store props |
 | ARCH-09 | 🟡 Important | `src/js/keyboard.js` | Escape cancel-temp-entry bypasses `mutate()` |
 | REACT-02 | 🟡 Important | `src/js/store.js` | `expandedOH` should be in `$store.ui` |
@@ -596,7 +531,7 @@ Fixed 2026-04-22: `.settings-card` → `flex + gap`; `.settings-field-group` rem
 | A11Y-06 | 🟡 Important | `src/index.html` | Sortable `<th>` not keyboard accessible |
 | A11Y-07 | 🟡 Important | `src/index.html` | RAG icon not keyboard accessible |
 | A11Y-08 | 🟢 Enhancement | `src/settings.html` | Tabs missing `aria-controls` / `role="tabpanel"` |
-| CSS-05 | 🔴 Critical | `src/js/store.js` | Raw hex colours for utilisation bar |
+| CSS-05 | ✅ Fixed v3.19.1 | `src/js/store.js` | `utilColor` now uses `var(--color-danger/warning/success)` |
 | CSS-06 | 🟡 Important | `src/css/styles.css` | Hardcoded pixel values (`2px`, `1px 3px`, `3px`) |
 | CSS-07 | 🟢 Enhancement | `src/css/design-tokens.css` | Focus shadow tokens use raw hex |
 | CSS-08 | 🟢 Enhancement | `src/settings.html` | Inline `style="resize:vertical"` |

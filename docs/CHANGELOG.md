@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.19.1] - 2026-04-24
+
+### Fixed
+- **ARCH-05** — `deleteEntry` now goes through `mutate()`, ensuring cache invalidation, undo snapshot, and audit entry on permanent row deletion (`src/js/store.js`)
+- **ARCH-06** — `updateMonthWorkingDays` and `updateMonthHoliday` now replace the array element reference instead of mutating in-place, making Alpine reactivity and `state.months` synchronisation reliable (`src/js/settings-page.js`)
+- **ARCH-07** — Removed duplicate empty `ismOptions` getter that was silently masking the real implementation (`src/js/store.js`)
+- **CSS-05** — Utilisation bar `utilColor` now uses `var(--color-danger)`, `var(--color-warning)`, `var(--color-success)` instead of raw hex values, aligning with the design token system (`src/js/store.js`)
+
+---
+
 ## [3.19.0] - 2026-04-23
 
 ### Added

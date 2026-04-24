@@ -15,7 +15,7 @@ const Storage = {
   adapter: 'localStorage',   // Switch to 'azure' when ready
   currentUser: null,         // Set via Storage.setCurrentUser(name) at init
 
-  // Legacy bulk API — used by undo/redo and initial load
+  // Legacy bulk API — used for initial load
   save(data) { ... },
   load() { ... },
   loadAll() { ... },         // Alias for load(); signals remote-adapter intent at call sites
@@ -30,7 +30,7 @@ const Storage = {
 **Benefits:**
 - No code changes in app logic when switching adapters
 - Per-row API means remote adapters only touch the affected row
-- `op` + `meta` + `saveSpec` + `currentUser` are pre-wired in `mutate()` — audit trail (#1150) requires one new line, zero call-site changes
+- `op` + `meta` + `saveSpec` + `currentUser` are all available inside `mutate()` — audit trail is live in `audit.js`
 
 ### Per-Row Record Taxonomy
 
@@ -42,24 +42,29 @@ const Storage = {
 | `'settings'` | singleton | `planSettings` object |
 | `'locations'` | singleton | `activeLocations` array |
 | `'appState'` | singleton | `nextId`, filters, groupBy |
-| `'auditLog'` | uuid per event | Append-only audit entry (reserved, #1150) |
+| `'auditLog'` | uuid per event | Append-only audit entry (live in `audit.js`) |
 
 ---
 
 ## Deploying to Azure Static Web Apps
 
+### Prerequisites
+
+- **Resource Group** — must exist before creating the SWA resource (requires IT provisioning if you lack subscription-level permissions)
+- **App Registration** — already created by IT; you have admin access to configure redirect URIs and secrets
+- **Tier decision** — **Free tier** is sufficient. Free tier supports managed AAD authentication via the built-in `/.auth/me` endpoint. Standard tier ($9/month) is only needed for private endpoints or fully custom auth config — not required here.
+- **Estimated cost** — Free tier SWA ($0) + Azure Table Storage (< $1/month at this usage scale)
+
 ### Step 1 — Create the SWA resource
 
-1. In the [Azure portal](https://portal.azure.com), create a new **Static Web App** (free tier)
-2. Connect to your GitHub repository (enables GitHub Actions CI/CD) or choose "Other" for manual deployment
-3. Set build details:
-   - **App location:** `/` (repository root — Vite config is at root)
-   - **Output location:** `dist` (Vite build output)
-4. Note the deployment token from the SWA resource overview
+1. In the [Azure portal](https://portal.azure.com), open your Resource Group → **Create** → search "Static Web App"
+2. Select **Free** plan
+3. Choose "Other" for deployment source (manual deploy via SWA CLI)
+4. Note the **deployment token** from the SWA resource overview once created — needed for Step 4
 
 ### Step 2 — Configure routing
 
-`staticwebapp.config.json` is already configured for SPA routing:
+`staticwebapp.config.json` is already configured for SPA routing — no changes needed:
 
 ```json
 {
@@ -73,11 +78,28 @@ const Storage = {
 }
 ```
 
-### Step 3 — Enable authentication (optional)
+### Step 3 — Deploy (M1)
 
-In the SWA resource → **Authentication** → add identity provider → **Azure Active Directory**.
+```bash
+npm run build
+npx @azure/static-web-apps-cli deploy dist/ --deployment-token <token>
+```
 
-Once enabled, the `/.auth/me` endpoint is available automatically. Resolve user identity at app init:
+Note the live URL (e.g. `https://your-app.azurestaticapps.net`) — needed for Step 4.
+
+### Step 4 — Configure App Registration redirect URI
+
+In the Azure portal, open the App Registration IT created:
+1. **Authentication** → **Add a platform** → **Web**
+2. Add redirect URI: `https://<your-swa-url>/.auth/login/aad/callback`
+3. Note the **Application (client) ID** and **Directory (tenant) ID** from the Overview page
+4. **Certificates & secrets** — create a new client secret; copy the value immediately (shown once only)
+
+### Step 5 — Enable authentication (M2)
+
+In the SWA resource → **Authentication** → add identity provider → **Azure Active Directory** → provide the client ID and secret from Step 4.
+
+Once enabled, `/.auth/me` is available automatically. Resolve user identity at app init in `src/js/app.js`:
 
 ```javascript
 async function resolveCurrentUser() {
@@ -92,24 +114,6 @@ async function resolveCurrentUser() {
 ```
 
 Call `resolveCurrentUser()` before `loadFromStorage()` in `src/js/app.js`.
-
-### Step 4 — Deploy
-
-**Via GitHub Actions (automated):**
-Push to the connected branch — GitHub Actions runs the workflow automatically.
-
-**Via Azure CLI (manual):**
-```bash
-npm run build
-az staticwebapp deploy --name <app-name> --resource-group <rg> --source dist/
-```
-
-**Via SWA CLI (local dev + deploy):**
-```bash
-npm install -g @azure/static-web-apps-cli
-swa start http://localhost:5173 --run "npm run dev"   # local dev with auth emulation
-swa deploy dist/ --deployment-token <token>           # manual deploy
-```
 
 ---
 
